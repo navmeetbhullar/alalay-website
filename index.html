@@ -538,7 +538,11 @@ h2.big{ font-size:clamp(34px,5vw,88px); max-width:14ch; margin-bottom:28px; line
   color:rgba(255,255,255,.55); margin:0 0 clamp(5px,.8vh,10px); text-align:left;
   text-shadow:0 2px 14px rgba(0,0,0,.85);
 }
-.cells{ display:grid; grid-template-columns:repeat(7,1fr); gap:clamp(6px,.7vw,14px) }
+/* minmax(0,...) not 1fr: scale() shrinks what is painted but not what is
+   laid out, so the EYES indicator keeps its full unscaled width as a
+   min-content floor and a plain 1fr column refuses to go below it. The
+   last column then pushed out past the container, on the eyes row only. */
+.cells{ display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:clamp(6px,.7vw,14px) }
 .cell{
   padding:clamp(10px,1.4vh,20px) 4px clamp(8px,1vh,14px); border-radius:16px; text-align:center;
   background:linear-gradient(180deg, rgba(255,255,255,.08) 0%, rgba(255,255,255,.02) 32%, rgba(255,255,255,0) 64%),
@@ -550,13 +554,28 @@ h2.big{ font-size:clamp(34px,5vw,88px); max-width:14ch; margin-bottom:28px; line
 /* The scaled indicator needs its BOX to be the painted size, same trap
    as the introduction lens. And the scale must stay UNITLESS: scale()
    rejects a length, so clamp(.66,.155vh,1.45) silently voided the whole
-   transform and every cell fell back to 1.0. Height steps instead,
-   because three rows run out of vertical room first. */
-.cell .indicator{ --ind-scale:1.35 }
-.cell .hold{ height:90px; display:flex; align-items:center; justify-content:center }
-@media (max-height:840px){ .cell .indicator{ --ind-scale:1.12 } .cell .hold{ height:76px } }
-@media (max-height:720px){ .cell .indicator{ --ind-scale:.94 } .cell .hold{ height:64px } }
-@media (max-height:600px){ .cell .indicator{ --ind-scale:.76 } .cell .hold{ height:54px } }
+   transform and every cell fell back to 1.0.
+
+   Two things squeeze this grid and they are independent: a short window
+   runs the three rows out of vertical room, and a narrow window runs a
+   cell out of room for the indicator inside it. Stepping one variable
+   for each and taking the smaller means a window that is both short and
+   narrow gets the smaller of the two rather than the last rule to match.
+   The widest look is EYES at about 90px, so the cap is content / 90. */
+.cell{ --ind-h:1.35; --ind-w:1.35 }
+.cell .indicator{ --ind-scale:min(var(--ind-h),var(--ind-w)) }
+/* Tracks the scale instead of being stepped separately, so the row can
+   never keep height the indicator no longer needs. */
+.cell .hold{ height:calc(66px * min(var(--ind-h),var(--ind-w)));
+  display:flex; align-items:center; justify-content:center }
+@media (max-height:840px){ .cell{ --ind-h:1.12 } }
+@media (max-height:720px){ .cell{ --ind-h:.94 } }
+@media (max-height:600px){ .cell{ --ind-h:.76 } }
+@media (max-width:1150px){ .cell{ --ind-w:1.15 } }
+@media (max-width:880px){  .cell{ --ind-w:1.00 } }
+@media (max-width:780px){  .cell{ --ind-w:.88 } }
+@media (max-width:700px){  .cell{ --ind-w:.78 } }
+@media (max-width:620px){  .cell{ --ind-w:.68 } }
 .cell .nm{ margin-top:clamp(6px,.9vh,12px); font-size:clamp(8.5px,.72vw,12px);
   letter-spacing:.1em; text-transform:uppercase; color:rgba(255,255,255,.46) }
 
@@ -568,12 +587,18 @@ h2.big{ font-size:clamp(34px,5vw,88px); max-width:14ch; margin-bottom:28px; line
 .cell[data-skin=breath]   .skin-breath,
 .cell[data-skin=eyes]     .skin-eyes{ display:flex !important }
 
-/* Seven across only survives while a cell stays wider than the indicator
-   it has to hold. Below that the row is stepped down rather than squeezed,
-   so a cell is never narrower than its own contents. */
-@media (max-width:1100px){ .cells{ grid-template-columns:repeat(4,1fr) } }
-@media (max-width:520px){ .cells{ grid-template-columns:repeat(3,1fr) } }
-@media (max-width:400px){ .cells{ grid-template-columns:repeat(2,1fr) } }
+/* Dropping a column is not free: seven states over four columns is two
+   lines per look, so three looks become six lines and the grid roughly
+   doubles in height. This section is pinned, it cannot scroll, so height
+   is the scarcer of the two. Seven across is therefore held as far down
+   as the shrinking indicator above allows, and only then stepped. */
+@media (max-width:560px){ .cells{ grid-template-columns:repeat(4,minmax(0,1fr)) } }
+/* Four is the floor, not a step on the way to one. Three columns would
+   put seven states on three lines instead of two and make the whole
+   thing half again as tall, which is the opposite of what a phone needs
+   from a section that cannot scroll. Below here the cells get smaller,
+   never fewer. */
+@media (max-width:420px){ .cell{ --ind-w:.58 } }
 
 /* Belt and braces after the width fix above: even if some future change
    makes the grid too wide again, it can no longer paint outside this
@@ -794,7 +819,12 @@ body.rebuilding *::after{ transition:none !important; animation:none !important 
 .field .lbl{ display:block; font-size:clamp(10.5px,.8vw,13px); letter-spacing:.16em;
   text-transform:uppercase; color:rgba(255,255,255,.58); margin-bottom:8px }
 .field .opt{ color:rgba(255,255,255,.34) }
-.join input, .join textarea{
+/* Scoped to the real fields. The country picker builds its own input and
+   its own button inside this form, and the unscoped versions of these
+   two rules dressed its flag button as the amber submit CTA and gave its
+   search box a 16px pill. Anything the picker owns is styled further
+   down, on its own terms. */
+.join .field input:not(.iti__search-input), .join .field textarea{
   width:100%; padding:clamp(15px,1.2vw,22px) clamp(18px,1.4vw,28px); border-radius:16px;
   font-family:inherit; font-size:clamp(16px,1.05vw,21px); font-weight:650; letter-spacing:.020em;
   color:rgba(255,255,255,.96); background:rgba(8,12,18,.62);
@@ -802,8 +832,8 @@ body.rebuilding *::after{ transition:none !important; animation:none !important 
   backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px);
 }
 .join textarea{ display:block; resize:vertical; line-height:1.5 }
-.join input::placeholder, .join textarea::placeholder{ color:rgba(255,255,255,.34) }
-.join input:focus-visible, .join textarea:focus-visible{ border-color:rgba(var(--accent),.7); box-shadow:0 0 0 3px rgba(var(--accent),.2) }
+.join .field input:not(.iti__search-input)::placeholder, .join .field textarea::placeholder{ color:rgba(255,255,255,.34) }
+.join .field input:not(.iti__search-input):focus-visible, .join .field textarea:focus-visible{ border-color:rgba(var(--accent),.7); box-shadow:0 0 0 3px rgba(var(--accent),.2) }
 .hint{ margin:-4px 0 clamp(14px,1.2vw,20px); font-size:clamp(12.5px,.85vw,15px); line-height:1.5;
   color:rgba(255,255,255,.42) }
 
@@ -847,14 +877,17 @@ body.rebuilding *::after{ transition:none !important; animation:none !important 
   font-family:inherit; font-size:clamp(14px,.95vw,17px); padding-top:12px; padding-bottom:12px;
 }
 .join .iti__search-input::placeholder{ color:rgba(255,255,255,.34) }
-.join button{
+/* Direct child only. The one amber button on this form is the one that
+   submits it; the picker's flag button is nested and must not inherit a
+   call to action's clothes. */
+.join > button{
   width:100%; margin-top:8px; padding:clamp(16px,1.3vw,24px) 24px; border-radius:16px; cursor:pointer;
   font-family:inherit; font-size:clamp(16px,1.05vw,21px); font-weight:650; letter-spacing:.020em;
   color:#1a1204; background:rgb(var(--accent)); border:0;
   transition:filter .3s var(--ease);
 }
-.join button:hover{ filter:brightness(1.08) }
-.join button:focus-visible{ outline:2px solid rgb(var(--accent)); outline-offset:3px }
+.join > button:hover{ filter:brightness(1.08) }
+.join > button:focus-visible{ outline:2px solid rgb(var(--accent)); outline-offset:3px }
 .done{ margin-top:18px; font-size:clamp(16px,1.05vw,21px); line-height:1.55;
   color:rgb(var(--s-verified)); text-align:center }
 .err{ margin-top:10px; font-size:clamp(13px,.9vw,16px); line-height:1.5; color:rgb(var(--s-failed)); text-align:center }
