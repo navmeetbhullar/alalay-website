@@ -8,6 +8,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300..800&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@29.2.3/dist/css/intlTelInput.css">
 <!--
   ==================================================================
   AETHER  -  THE SCROLL DRIVEN CAMERA
@@ -523,7 +525,12 @@ h2.big{ font-size:clamp(34px,5vw,88px); max-width:14ch; margin-bottom:28px; line
 /* ==================================================================
    THREE LOOKS, SEVEN STATES.  21 cells, every one live.
    ================================================================== */
-.grid{ width:min(1680px,97vw); margin:clamp(16px,2.4vh,34px) auto 0 }
+/* 97vw was measured against the VIEWPORT, but this sits inside .ov, which
+   has 3vw of padding of its own. So the grid was always wider than the box
+   holding it and the end cells ran off the edge, at every width except a
+   maximised 1920 where the 1680 cap happened to hide it. Per cent of the
+   parent instead, capped at the same 1680, so the wide layout is unchanged. */
+.grid{ width:100%; max-width:1680px; margin:clamp(16px,2.4vh,34px) auto 0 }
 .grow{ margin-bottom:clamp(10px,1.6vh,22px) }
 .grow:last-child{ margin-bottom:0 }
 .grow .rowname{
@@ -561,7 +568,18 @@ h2.big{ font-size:clamp(34px,5vw,88px); max-width:14ch; margin-bottom:28px; line
 .cell[data-skin=breath]   .skin-breath,
 .cell[data-skin=eyes]     .skin-eyes{ display:flex !important }
 
-@media (max-width:900px){ .cells{ grid-template-columns:repeat(4,1fr) } }
+/* Seven across only survives while a cell stays wider than the indicator
+   it has to hold. Below that the row is stepped down rather than squeezed,
+   so a cell is never narrower than its own contents. */
+@media (max-width:1100px){ .cells{ grid-template-columns:repeat(4,1fr) } }
+@media (max-width:520px){ .cells{ grid-template-columns:repeat(3,1fr) } }
+@media (max-width:400px){ .cells{ grid-template-columns:repeat(2,1fr) } }
+
+/* Belt and braces after the width fix above: even if some future change
+   makes the grid too wide again, it can no longer paint outside this
+   section and over whatever is behind it. Horizontal only, because the
+   cells' drop shadows fall downwards and must not be cut off. */
+#ovLooks .in{ overflow-x:clip }
 
 /* ==================================================================
    THE DEMO: A REAL DESKTOP
@@ -788,6 +806,47 @@ body.rebuilding *::after{ transition:none !important; animation:none !important 
 .join input:focus-visible, .join textarea:focus-visible{ border-color:rgba(var(--accent),.7); box-shadow:0 0 0 3px rgba(var(--accent),.2) }
 .hint{ margin:-4px 0 clamp(14px,1.2vw,20px); font-size:clamp(12.5px,.85vw,15px); line-height:1.5;
   color:rgba(255,255,255,.42) }
+
+/* ------------------------------------------------------------------
+   The country picker on the phone field.
+   intl-tel-input ships light themed and inline-block. Everything below
+   is either a variable it already exposes for theming, or the two
+   layout facts it cannot know: that this input is full width, and that
+   the flag has to sit inside the same glass box as the text.
+   No new colours are invented here. They are the ones already used by
+   .join input, .field .lbl and .cell.
+   ------------------------------------------------------------------ */
+.join .iti{
+  display:block; width:100%;
+  --iti-border-color:rgba(255,255,255,.2);
+  --iti-country-selector-bg:transparent;
+  --iti-hover-color:rgba(255,255,255,.09);
+  --iti-icon-color:rgba(255,255,255,.62);
+  --iti-spacer-horizontal:12px;
+}
+/* The flag button sits over the input, so it needs the input's own left
+   padding or the flag hugs the border. */
+.join .iti__selected-country{ padding-left:clamp(18px,1.4vw,28px) }
+.join .iti__selected-dial-code{ color:rgba(255,255,255,.96) }
+
+/* The dropdown is the only new surface, so it borrows the cell's glass
+   rather than a new one. */
+.join .iti__country-list, .join .iti__search-input-wrapper{
+  background:rgba(11,14,19,.94);
+  backdrop-filter:blur(20px) saturate(160%); -webkit-backdrop-filter:blur(20px) saturate(160%);
+}
+.join .iti__country-container .iti__country-list{
+  border:.5px solid rgba(255,255,255,.14); border-radius:0 0 14px 14px;
+  box-shadow:0 24px 50px -24px rgba(0,0,0,.9);
+}
+.join .iti__country{ color:rgba(255,255,255,.9); font-size:clamp(13px,.9vw,16px) }
+.join .iti__country-name{ color:rgba(255,255,255,.9) }
+.join .iti__dial-code{ color:rgba(255,255,255,.5) }
+.join .iti__search-input{
+  background:transparent; color:rgba(255,255,255,.96);
+  font-family:inherit; font-size:clamp(14px,.95vw,17px); padding-top:12px; padding-bottom:12px;
+}
+.join .iti__search-input::placeholder{ color:rgba(255,255,255,.34) }
 .join button{
   width:100%; margin-top:8px; padding:clamp(16px,1.3vw,24px) 24px; border-radius:16px; cursor:pointer;
   font-family:inherit; font-size:clamp(16px,1.05vw,21px); font-weight:650; letter-spacing:.020em;
@@ -993,7 +1052,7 @@ body.rebuilding *::after{ transition:none !important; animation:none !important 
     </label>
     <label class="field">
       <span class="lbl">Phone <span class="opt">optional</span></span>
-      <input type="tel" name="phone" autocomplete="tel" placeholder="Leave blank if you prefer">
+      <input type="tel" id="joinPhone" name="phone" autocomplete="tel" placeholder="Leave blank if you prefer">
     </label>
     <label class="field">
       <span class="lbl">What are you hoping Aether solves for you? <span class="opt">optional</span></span>
@@ -1836,12 +1895,113 @@ function readUTM(){
   catch(e){ return {}; }
 }
 
+/* ==================================================================
+   THE PHONE FIELD
+   ------------------------------------------------------------------
+   People type their local number and leave the country off, which makes
+   a list of numbers you cannot ring. The picker puts the dial code in
+   front of it instead of asking anyone to remember it.
+
+   The country is guessed from the browser's own time zone. There is no
+   free geo IP lookup built into intl-tel-input, only a hook where you
+   supply one, and every such service means sending a stranger's IP to a
+   third party and waiting on a round trip before the right flag appears.
+   The time zone is already on the machine, costs nothing and leaks
+   nothing. India is the fallback, not the assumption.
+   ================================================================== */
+var TZ_COUNTRY = {
+  'Asia/Kolkata':'in','Asia/Calcutta':'in','Asia/Colombo':'lk','Asia/Karachi':'pk',
+  'Asia/Dhaka':'bd','Asia/Kathmandu':'np','Asia/Dubai':'ae','Asia/Riyadh':'sa',
+  'Asia/Qatar':'qa','Asia/Kuwait':'kw','Asia/Tehran':'ir','Asia/Jerusalem':'il',
+  'Asia/Singapore':'sg','Asia/Kuala_Lumpur':'my','Asia/Jakarta':'id','Asia/Manila':'ph',
+  'Asia/Bangkok':'th','Asia/Ho_Chi_Minh':'vn','Asia/Saigon':'vn','Asia/Hong_Kong':'hk',
+  'Asia/Taipei':'tw','Asia/Shanghai':'cn','Asia/Tokyo':'jp','Asia/Seoul':'kr',
+  'Europe/London':'gb','Europe/Dublin':'ie','Europe/Lisbon':'pt','Europe/Madrid':'es',
+  'Europe/Paris':'fr','Europe/Brussels':'be','Europe/Amsterdam':'nl','Europe/Berlin':'de',
+  'Europe/Zurich':'ch','Europe/Vienna':'at','Europe/Rome':'it','Europe/Prague':'cz',
+  'Europe/Warsaw':'pl','Europe/Budapest':'hu','Europe/Bucharest':'ro','Europe/Athens':'gr',
+  'Europe/Stockholm':'se','Europe/Oslo':'no','Europe/Copenhagen':'dk','Europe/Helsinki':'fi',
+  'Europe/Moscow':'ru','Europe/Kiev':'ua','Europe/Kyiv':'ua','Europe/Istanbul':'tr',
+  'America/New_York':'us','America/Detroit':'us','America/Chicago':'us','America/Denver':'us',
+  'America/Phoenix':'us','America/Los_Angeles':'us','America/Anchorage':'us','Pacific/Honolulu':'us',
+  'America/Toronto':'ca','America/Vancouver':'ca','America/Edmonton':'ca','America/Winnipeg':'ca',
+  'America/Halifax':'ca','America/Mexico_City':'mx','America/Bogota':'co','America/Lima':'pe',
+  'America/Santiago':'cl','America/Sao_Paulo':'br','America/Argentina/Buenos_Aires':'ar',
+  'Africa/Lagos':'ng','Africa/Accra':'gh','Africa/Nairobi':'ke','Africa/Johannesburg':'za',
+  'Africa/Cairo':'eg','Africa/Casablanca':'ma','Africa/Tunis':'tn','Africa/Algiers':'dz',
+  'Australia/Sydney':'au','Australia/Melbourne':'au','Australia/Brisbane':'au',
+  'Australia/Perth':'au','Australia/Adelaide':'au','Pacific/Auckland':'nz'
+};
+
+function guessCountry(){
+  var tz='';
+  try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch(e){}
+  if (TZ_COUNTRY[tz]) return TZ_COUNTRY[tz];
+  /* A zone we do not list still narrows it down: en-GB, pt-BR and so on
+     carry the region in the tag. */
+  try {
+    var langs = (navigator.languages && navigator.languages.length) ? navigator.languages
+              : [navigator.language || ''];
+    for (var i=0;i<langs.length;i++){
+      var m = /-([A-Za-z]{2})$/.exec(langs[i]||'');
+      if (m) return m[1].toLowerCase();
+    }
+  } catch(e){}
+  return 'in';
+}
+
+var phoneITI = null;
+
+function initPhone(){
+  var el = document.getElementById('joinPhone');
+  /* If the CDN is blocked the field simply stays the plain input it
+     already is. Optional means optional: nothing here may ever be the
+     reason a signup fails. */
+  if (!el || typeof window.intlTelInput !== 'function') return;
+  try {
+    phoneITI = window.intlTelInput(el, {
+      initialCountry: guessCountry(),
+      separateDialCode: true,
+      countrySearch: true,
+      /* Bundled build, so utils is already in memory and getNumber can
+         format straight away with nothing further to fetch. */
+      loadUtils: null
+    });
+  } catch(e){ phoneITI = null; }
+}
+
+/* Whatever is sent must be the number you could actually dial. */
+function readPhone(form){
+  var el = form.phone;
+  var raw = el ? String(el.value).trim() : '';
+  if (!raw) return '';               /* optional, and stays optional */
+  if (!phoneITI) return raw;
+
+  var full = '';
+  try { full = phoneITI.getNumber() || ''; } catch(e){ full = ''; }
+  if (full) return full;
+
+  /* Half typed or unparseable. Do not drop what a person actually
+     wrote: keep it, with the country they picked in front of it. */
+  if (raw.charAt(0) === '+') return raw;
+  var dial = '';
+  try {
+    /* v29 calls this getSelectedCountry. Older builds called it
+       getSelectedCountryData, and a silent miss here would post a bare
+       local number, which is the very thing this field exists to stop. */
+    var get = phoneITI.getSelectedCountry || phoneITI.getSelectedCountryData;
+    var d = typeof get === 'function' ? get.call(phoneITI) : null;
+    if (d && d.dialCode) dial = '+' + d.dialCode + ' ';
+  } catch(e){}
+  return dial + raw;
+}
+
 function wireForm(){
   var f=document.getElementById('joinForm');
   var err=document.getElementById('joinErr'), done=document.getElementById('joinDone');
   f.addEventListener('submit', function(e){
     e.preventDefault();
-    var email=f.email.value.trim(), phone=f.phone.value.trim();
+    var email=f.email.value.trim(), phone=readPhone(f);
     var problem=f.problem ? f.problem.value.trim() : '';
     err.hidden=true;
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){
@@ -1965,6 +2125,9 @@ layout();
 initLens();
 initUTM();
 wireForm();
+/* The picker's script is deferred, so it has run by the time this fires.
+   If it never arrives, initPhone quietly leaves the plain input alone. */
+document.addEventListener('DOMContentLoaded', initPhone);
 readScroll();
 curY = cameraAt(rawP).y;
 curS = cameraAt(rawP).s;
@@ -1987,5 +2150,7 @@ reduce.addEventListener('change', function(){
 
 })();
 </script>
+<script defer src="https://cdn.jsdelivr.net/npm/intl-tel-input@29.2.3/dist/js/intlTelInputWithUtils.min.js"></script>
+<script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>
