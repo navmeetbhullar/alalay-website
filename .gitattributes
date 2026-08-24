@@ -1,0 +1,4 @@
+# Keep the site byte for byte identical on every machine. The build was
+# verified against an exact byte count, so silent line ending rewriting
+# would make that check meaningless.
+* -text

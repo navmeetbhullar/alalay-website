@@ -1,0 +1,1991 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Aether</title>
+<meta name="description" content="A voice controlled desktop assistant for Windows. It proves every action instead of claiming it.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300..800&display=swap" rel="stylesheet">
+<!--
+  ==================================================================
+  AETHER  -  THE SCROLL DRIVEN CAMERA
+  ==================================================================
+  One photo. One fixed window. Scrolling moves a camera down through
+  the picture, it does not scroll the picture.
+
+  master-landscape.jpg        2133 x 5777, read from the JPEG header
+  master-landscape-small.jpg  1067 x 2889, the same picture, half size
+
+  NOTHING REAL IS REBUILT BY HAND.  splice-panel.js cuts four chunks
+  out of their sources and verifies every one byte for byte:
+
+    Aether-panel-Final.html   the panel CSS, its markup, the AE state machine
+    demo-v2 site.js           the captured Calculator accessibility tree
+
+      node splice-panel.js
+
+  Never hand edit anything between the SPLICED fences.
+
+  THE DEMO is the real panel acting on a real desktop: a Notepad, a
+  Calculator built from 35 real accessibility rectangles read off this
+  machine, and the panel in the scene's bottom right where it covers
+  neither. Scroll drives all 17 beats, forwards and backwards.
+
+  EVERY TUNABLE NUMBER IS IN THE `T` OBJECT AT THE TOP OF THE SCRIPT.
+
+  NINE CAMERA SEGMENTS, four of them holds. Everything that has to be
+  read or watched sits on a hold, so nothing moves under the reader:
+
+    hold K0    the hero
+    K0 -> K1   the reveal, the longest and slowest move
+    hold K1    the lens, then the three looks in all seven states
+    K1 -> K2   the valley opens
+    hold K2    THE DEMO, all 17 beats, then the claim
+    K2 -> K3   the descent into the grass
+    hold K3    where it stands
+    K3 -> K4   closer to the ground
+    hold K4    the waitlist
+
+  NOTE ON NAMES: the brief's K3 is this file's K4. K3 is a new stop
+  short of the bottom so the camera has somewhere to go between
+  "where it stands" and the waitlist.
+
+  Everything between HARNESS-START and HARNESS-END is throwaway.
+  ==================================================================
+-->
+
+<style id="ae-panel-css">
+/* ==== SPLICED PANEL CSS, BYTE IDENTICAL ==== */
+/* ================================================================
+   TOKENS
+   ================================================================ */
+:root{
+  --accent:233,169,77;
+  --s-verified:74,222,128;
+  --s-failed:242,109,109;
+  --s-unverified:245,158,11;
+  --s-blocked:91,157,249;
+  --ease:cubic-bezier(.32,.72,0,1);
+  --ease-soft:cubic-bezier(.33,1,.68,1);
+  --ease-spring:cubic-bezier(.2,.9,.25,1.06);
+
+  /* TYPE: Quiet. Inter 650 / 0.020em. Line heights in px on purpose. */
+  --font:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
+  --t-goal:16px;  --t-goal-w:650; --t-goal-ls:.020em; --t-goal-lh:23px;
+  --t-body:15px;  --t-body-w:650; --t-body-ls:.020em; --t-body-lh:22px;
+  --t-ev:13.5px;  --t-ev-w:650;   --t-ev-ls:.020em;
+  --t-micro:10px; --t-micro-ls:.15em;
+  --t-why:12.5px; --t-why-lh:19px;
+
+  --ind-scale:.62;   /* aperture base is 58px, so .62 puts it at 36px */
+}
+
+/* ================================================================
+   LIQUID GLASS
+   ================================================================ */
+.lg{ position:relative; isolation:isolate;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.085) 0%, rgba(255,255,255,.022) 26%, rgba(255,255,255,0) 58%),
+    rgba(16,17,21,.52);
+  backdrop-filter:blur(36px) saturate(185%) brightness(1.06);
+  -webkit-backdrop-filter:blur(36px) saturate(185%) brightness(1.06);
+  border:.5px solid rgba(255,255,255,.11);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.26),
+    inset 0 -20px 36px -26px rgba(0,0,0,.85),
+    0 32px 68px -22px rgba(0,0,0,.62),
+    0 2px 10px rgba(0,0,0,.28);
+}
+.lg::before{ content:''; position:absolute; inset:0; border-radius:inherit; pointer-events:none; z-index:-1;
+  background:
+    radial-gradient(130% 76% at 12% -14%, rgba(255,255,255,.15), transparent 56%),
+    radial-gradient(90% 60% at 88% 112%, rgba(255,255,255,.05), transparent 60%); }
+
+/* ================================================================
+   HOST: which corner, and which way the panel opens
+   DOM order is indicator first, then panel.
+   ================================================================ */
+.ae-host{ position:fixed; z-index:9999; display:flex; gap:12px; padding:20px; }
+[data-corner=tl] .ae-host{ top:0; left:0;  flex-direction:column;         align-items:flex-start }
+[data-corner=tr] .ae-host{ top:0; right:0; flex-direction:column;         align-items:flex-end }
+[data-corner=bl] .ae-host{ bottom:0; left:0;  flex-direction:column-reverse; align-items:flex-start; padding-bottom:48px }
+[data-corner=br] .ae-host{ bottom:0; right:0; flex-direction:column-reverse; align-items:flex-end;   padding-bottom:48px }
+
+.ae-ind-btn{ background:none; border:0; padding:0; min-width:44px; height:44px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; -webkit-tap-highlight-color:transparent; }
+
+/* ================================================================
+   INDICATOR
+   ================================================================ */
+.indicator{ display:inline-flex; align-items:center; justify-content:center;
+  transform:scale(var(--ind-scale)); transform-origin:center; }
+.indicator .skin{ display:none }
+[data-skin=aperture] .skin-aperture{ display:flex }
+[data-skin=breath]   .skin-breath{ display:flex }
+[data-skin=eyes]     .skin-eyes{ display:flex }
+
+@keyframes ind-blink{0%,100%{opacity:.4}50%{opacity:1}}
+@keyframes ind-blink-fast{0%,100%{opacity:.35}50%{opacity:1}}
+
+/* --- aperture (default) --- */
+.ap{ width:58px;height:58px;border-radius:50%;position:relative;
+  background:radial-gradient(circle at 50% 42%,#0a0d12 0%,#141922 66%,#1e242f 100%);
+  box-shadow:inset 0 2px 9px rgba(0,0,0,.9), inset 0 -1px 0 rgba(255,255,255,.05),
+    0 0 0 1px rgba(255,255,255,.09), 0 12px 30px rgba(0,0,0,.55);
+  align-items:center;justify-content:center;overflow:hidden }
+.ap .blades{ position:absolute;inset:5px;border-radius:50%;opacity:.55;transition:opacity .5s ease;
+  background:conic-gradient(from 0deg,
+    transparent 0 11%, rgba(255,255,255,.055) 11% 12.2%, transparent 12.2% 27.6%,
+    rgba(255,255,255,.055) 27.6% 28.8%, transparent 28.8% 44.3%,
+    rgba(255,255,255,.055) 44.3% 45.5%, transparent 45.5% 61%,
+    rgba(255,255,255,.055) 61% 62.2%, transparent 62.2% 77.6%,
+    rgba(255,255,255,.055) 77.6% 78.8%, transparent 78.8% 94.3%,
+    rgba(255,255,255,.055) 94.3% 95.5%, transparent 95.5%) }
+.ap .iris{ width:28px;height:28px;border-radius:50%;border:6px solid rgba(255,255,255,.34);
+  opacity:.7; transition:all .55s var(--ease-soft) }
+.ap .core{ position:absolute;width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.12);
+  transition:background .45s ease, box-shadow .45s ease, width .4s ease, height .4s ease,
+    margin-left .28s cubic-bezier(.25,1.4,.4,1), margin-top .28s cubic-bezier(.25,1.4,.4,1) }
+
+[data-s=listening] .ap .iris{ width:40px;height:40px;border-width:4px;border-color:rgb(var(--accent));opacity:1;
+  box-shadow:0 0 22px rgba(var(--accent),.5), inset 0 0 15px rgba(var(--accent),.32);
+  animation:ap-breathe 2.2s ease-in-out infinite }
+@keyframes ap-breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.075)}}
+[data-s=listening] .ap .core{ background:rgb(var(--accent));width:7px;height:7px;box-shadow:0 0 12px rgba(var(--accent),.9) }
+
+[data-s=working] .ap .iris{ width:34px;height:34px;border-width:5px;border-color:transparent;
+  border-top-color:rgb(var(--accent));border-right-color:rgb(var(--accent));opacity:1;
+  animation:ap-spin 1.15s linear infinite }
+@keyframes ap-spin{to{transform:rotate(360deg)}}
+[data-s=working] .ap .blades{ opacity:.9; animation:ap-spin-rev 7s linear infinite }
+@keyframes ap-spin-rev{to{transform:rotate(-360deg)}}
+[data-s=working] .ap .core{ background:rgba(var(--accent),.75);width:6px;height:6px;box-shadow:0 0 10px rgba(var(--accent),.6) }
+
+[data-s=needsYou] .ap .iris{ width:44px;height:44px;border-width:3px;border-color:rgb(var(--s-blocked));opacity:1;
+  box-shadow:0 0 28px rgba(var(--s-blocked),.55), inset 0 0 20px rgba(var(--s-blocked),.3);
+  animation:ind-blink 1.6s ease-in-out infinite }
+[data-s=needsYou] .ap .core{ background:rgb(var(--s-blocked));width:10px;height:10px;box-shadow:0 0 16px rgba(var(--s-blocked),.95) }
+
+[data-s=completed] .ap .iris{ width:46px;height:46px;border-width:2px;border-color:rgb(var(--s-verified));opacity:1;
+  box-shadow:0 0 26px rgba(var(--s-verified),.5), inset 0 0 16px rgba(var(--s-verified),.16) }
+[data-s=completed] .ap .core{ background:rgb(var(--s-verified));width:6px;height:6px;box-shadow:0 0 12px rgba(var(--s-verified),.8) }
+
+[data-s=stopped] .ap .iris{ width:16px;height:16px;border-width:6px;border-color:rgb(var(--s-unverified));opacity:.88 }
+[data-s=stopped] .ap .core{ background:rgba(0,0,0,.5);width:4px;height:4px;box-shadow:none }
+
+[data-s=problem] .ap .iris{ width:34px;height:34px;border-width:5px;border-color:rgb(var(--s-failed));opacity:1;
+  box-shadow:0 0 26px rgba(var(--s-failed),.6), inset 0 0 16px rgba(var(--s-failed),.3);
+  animation:ind-blink-fast 1.1s ease-in-out infinite }
+[data-s=problem] .ap .core{ background:rgb(var(--s-failed));width:8px;height:8px;box-shadow:0 0 14px rgba(var(--s-failed),.9) }
+
+/* --- breath --- */
+.br{ width:66px;height:20px;border-radius:999px;background:rgba(255,255,255,.34);opacity:.5;border:0;
+  transition:background .5s ease, box-shadow .5s ease, transform .5s var(--ease-soft), opacity .5s ease }
+[data-s=listening] .br{ background:rgb(var(--accent));opacity:1;box-shadow:0 0 26px 3px rgba(var(--accent),.55);
+  animation:br-breathe 2s ease-in-out infinite }
+@keyframes br-breathe{0%,100%{transform:scale(1)}50%{transform:scaleX(1.22) scaleY(1.15)}}
+[data-s=working] .br{ opacity:1; transition:none;
+  background-image:linear-gradient(90deg, rgba(var(--accent),.22) 0%, rgb(var(--accent)) 50%, rgba(var(--accent),.22) 100%);
+  background-size:200% 100%; background-repeat:repeat;
+  box-shadow:0 0 18px 1px rgba(var(--accent),.32);
+  animation:br-sweep 2s linear infinite }
+@keyframes br-sweep{ from{background-position:0% 0} to{background-position:-200% 0} }
+[data-s=needsYou] .br{ background:rgb(var(--s-blocked));opacity:1;transform:scaleX(1.14);
+  box-shadow:0 0 34px 6px rgba(var(--s-blocked),.6) }
+[data-s=completed] .br{ background:rgb(var(--s-verified));opacity:1;box-shadow:0 0 32px 5px rgba(var(--s-verified),.55) }
+[data-s=stopped] .br{ background:rgb(var(--s-unverified));opacity:.8;transform:scaleX(.66) }
+[data-s=problem] .br{ background:rgb(var(--s-failed));opacity:1;animation:br-red 1.8s ease-in-out infinite }
+@keyframes br-red{0%,100%{opacity:.42;box-shadow:none}50%{opacity:1;box-shadow:0 0 34px 5px rgba(var(--s-failed),.6)}}
+
+/* --- eyes --- */
+.ey{ gap:14px;align-items:center }
+.ey .eye{ width:38px;height:38px;border-radius:50%;position:relative;overflow:hidden;
+  background:radial-gradient(circle at 50% 38%,#0b0e13 0%,#10151d 70%,#1a202a 100%);
+  box-shadow:inset 0 2px 7px rgba(0,0,0,.88), inset 0 -1px 0 rgba(255,255,255,.05),
+    0 0 0 1px rgba(255,255,255,.08), 0 8px 20px rgba(0,0,0,.45);
+  border:0 solid transparent;
+  transition:height .35s var(--ease-soft), border-radius .35s ease, background .35s ease,
+    box-shadow .35s ease, border-color .35s ease }
+.ey .pupil{ position:absolute;width:15px;height:15px;border-radius:50%;background:rgba(255,255,255,.34);
+  top:50%;left:50%;
+  transition:background .4s ease, box-shadow .4s ease, width .3s ease, height .3s ease, opacity .3s ease,
+    transform .26s cubic-bezier(.25,1.4,.4,1) }
+.ey .lid{ position:absolute;left:-3px;right:-3px;height:0;background:#12161d;transition:height .1s ease;z-index:2 }
+.ey .lid.t{top:0} .ey .lid.b{bottom:0}
+.ey .eye.blink .lid{ height:52% }
+[data-s=listening] .ey{ animation:ey-beat 1.5s ease-in-out infinite }
+@keyframes ey-beat{0%{transform:scale(1)}12%{transform:scale(1.14)}24%{transform:scale(1)}
+  36%{transform:scale(1.09)}50%{transform:scale(1)}100%{transform:scale(1)}}
+[data-s=listening] .ey .pupil{ background:rgb(var(--accent));width:17px;height:17px;box-shadow:0 0 16px rgba(var(--accent),.75) }
+[data-s=working] .ey .eye{ height:20px;border-radius:42% }
+[data-s=working] .ey .pupil{ background:rgb(var(--accent));box-shadow:0 0 13px rgba(var(--accent),.6) }
+[data-s=needsYou] .ey .eye{ height:42px }
+[data-s=needsYou] .ey .pupil{ background:rgb(var(--s-blocked));width:19px;height:19px;
+  box-shadow:0 0 20px rgba(var(--s-blocked),.8);animation:ind-blink 1.6s ease-in-out infinite }
+[data-s=completed] .ey .eye{ height:17px;border-radius:999px 999px 0 0;overflow:visible;
+  background:transparent;box-shadow:none;border-width:4px 0 0 0;border-style:solid;
+  border-top-color:rgb(var(--s-verified));filter:drop-shadow(0 0 9px rgba(var(--s-verified),.65)) }
+[data-s=completed] .ey .pupil{ opacity:0 }
+[data-s=completed] .ey .lid{ display:none }
+[data-s=stopped] .ey .eye{ height:15px;border-radius:42% }
+[data-s=stopped] .ey .pupil{ background:rgb(var(--s-unverified));opacity:.7 }
+[data-s=problem] .ey .pupil{ background:rgb(var(--s-failed));box-shadow:0 0 18px rgba(var(--s-failed),.8);
+  animation:ind-blink-fast 1.1s ease-in-out infinite }
+
+/* ================================================================
+   PANEL
+   ================================================================ */
+.ae-panel{ width:400px; max-height:600px; box-sizing:border-box; overflow:hidden;
+  padding:24px; display:flex; flex-direction:column; gap:20px; border-radius:24px;
+  font-family:var(--font); color:rgba(255,255,255,.86);
+  -webkit-font-smoothing:antialiased;
+  opacity:0; pointer-events:none;
+  transition:opacity 180ms var(--ease), transform 180ms var(--ease) }
+[data-corner^=t] .ae-panel{ transform:translateY(-8px) scale(.965) }
+[data-corner^=b] .ae-panel{ transform:translateY(8px)  scale(.965) }
+[data-open="1"] .ae-panel{ opacity:1; pointer-events:auto; transform:none;
+  transition:opacity 320ms var(--ease-spring), transform 320ms var(--ease-spring) }
+
+.ae-mode{ display:none; flex-direction:column; gap:20px }
+[data-mode=resting] #restMode{ display:flex }
+[data-mode=running] #runMode{ display:flex }
+
+/* ---- resting content ---- */
+.ae-rest-top{ display:flex; flex-direction:column; gap:16px }
+.ae-hot{ font-size:var(--t-body); font-weight:var(--t-body-w); letter-spacing:var(--t-body-ls);
+  line-height:var(--t-body-lh); color:rgba(255,255,255,.86); text-wrap:pretty }
+.ae-key{ display:inline-block; padding:0 8px; border-radius:7px; font-size:13px; font-weight:650;
+  line-height:20px; letter-spacing:.01em; color:rgba(var(--accent),.96);
+  background:rgba(var(--accent),.10); border:.5px solid rgba(var(--accent),.24);
+  box-shadow:0 0 14px -4px rgba(var(--accent),.6) }
+.ae-plus{ color:rgba(255,255,255,.38) }
+.ae-input{ width:100%; height:44px; box-sizing:border-box; padding:0 16px; border-radius:13px;
+  outline:none; font-family:inherit; font-size:var(--t-body); font-weight:var(--t-body-w);
+  letter-spacing:var(--t-body-ls); color:rgba(255,255,255,.92); caret-color:rgb(var(--accent));
+  background:rgba(255,255,255,.05); border:.5px solid rgba(255,255,255,.10);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.06);
+  transition:border-color 220ms var(--ease), background 220ms var(--ease), box-shadow 220ms var(--ease) }
+.ae-input::placeholder{ color:rgba(255,255,255,.34) }
+.ae-input:focus{ border-color:rgba(var(--accent),.45); background:rgba(255,255,255,.065);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.06), 0 0 22px -8px rgba(var(--accent),.8) }
+.ae-egs{ display:flex; flex-direction:column; gap:9px }
+.ae-egs div{ font-size:13px; font-weight:600; letter-spacing:.018em; line-height:19px;
+  color:rgba(255,255,255,.40) }
+
+/* ---- goal ---- */
+.ae-goal{ display:flex; flex-direction:column; gap:7px }
+.ae-goal .lbl{ font-size:var(--t-micro); font-weight:650; letter-spacing:var(--t-micro-ls);
+  text-transform:uppercase; color:rgba(255,255,255,.30) }
+.ae-goal .txt{ font-size:var(--t-goal); font-weight:var(--t-goal-w); letter-spacing:var(--t-goal-ls);
+  line-height:var(--t-goal-lh); color:rgba(255,255,255,.88); text-wrap:pretty }
+
+/* ---- dots ---- */
+.ae-dots{ display:flex; align-items:center; gap:8px; min-height:22px }
+.ae-dots .track{ display:flex; align-items:center; gap:1px; flex:1; margin:0 -5px; flex-wrap:wrap }
+.ae-dothit{ padding:7px 4px; background:none; border:0; line-height:0; cursor:pointer;
+  -webkit-tap-highlight-color:transparent; animation:dotpop 340ms var(--ease) }
+@keyframes dotpop{ from{opacity:0;transform:scale(.4)} to{opacity:1;transform:none} }
+.ae-dothit:disabled{ cursor:default }
+.ae-dot{ display:block; width:7px; height:7px; border-radius:50%;
+  background:rgba(255,255,255,.16); transition:all 300ms var(--ease) }
+.ae-dot.verified{   background:rgb(var(--s-verified));   box-shadow:0 0 9px rgba(var(--s-verified),.75) }
+.ae-dot.unverified{ background:rgb(var(--s-unverified)); box-shadow:0 0 9px rgba(var(--s-unverified),.75) }
+.ae-dot.failed{     background:rgb(var(--s-failed));     box-shadow:0 0 9px rgba(var(--s-failed),.75) }
+.ae-dot.blocked{    background:rgb(var(--s-blocked));    box-shadow:0 0 11px rgba(var(--s-blocked),.9) }
+.ae-dot.live{ width:20px; border-radius:999px; background:rgba(255,255,255,.55);
+  box-shadow:0 0 12px rgba(255,255,255,.32) }
+.ae-dothit[data-viewing="1"] .ae-dot{ outline:1.5px solid rgba(255,255,255,.30); outline-offset:3px }
+.ae-dot.summary{ width:15px; border-radius:999px; background:rgba(255,255,255,.30) }
+.ae-dot.summary.verified{ background:rgb(var(--s-verified)); box-shadow:0 0 11px rgba(var(--s-verified),.85) }
+.ae-dot.summary.stopped{  background:rgb(var(--s-unverified)); box-shadow:0 0 11px rgba(var(--s-unverified),.85) }
+.ae-more{ width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.20);
+  margin-left:5px;flex-shrink:0;animation:morepulse 1.9s ease-in-out infinite }
+@keyframes morepulse{0%,100%{opacity:.22;transform:scale(.85)}50%{opacity:.7;transform:scale(1)}}
+.ae-now{ font-family:inherit;font-size:9.5px;font-weight:650;letter-spacing:.1em;text-transform:uppercase;
+  height:21px;padding:0 10px;border-radius:999px;cursor:pointer;flex-shrink:0;
+  color:rgba(255,255,255,.85);background:rgba(255,255,255,.10);
+  border:.5px solid rgba(255,255,255,.18);box-shadow:0 0 14px rgba(255,255,255,.10);
+  opacity:0;pointer-events:none;transform:scale(.9);transition:all 240ms var(--ease) }
+.ae-now.show{ opacity:1;pointer-events:auto;transform:none }
+
+/* ---- card. colour is GLOW, never fill ---- */
+.ae-stage{ position:relative;touch-action:pan-y;user-select:none;cursor:grab }
+.ae-stage.dragging{ cursor:grabbing }
+.ae-stage.dragging>*{ transition:none }
+.ae-card{ position:relative;border-radius:16px;padding:16px;
+  background:linear-gradient(180deg, rgba(255,255,255,.055), rgba(255,255,255,.018));
+  border:.5px solid rgba(255,255,255,.09);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.14);
+  display:flex;flex-direction:column;gap:12px;
+  transition:box-shadow 420ms var(--ease-soft), border-color 420ms var(--ease-soft) }
+.ae-card[data-k]{ border-color:rgba(255,255,255,.10) }
+.ae-card[data-k=verified]{   box-shadow:inset 0 1px 0 rgba(255,255,255,.14), inset 0 0 24px -10px rgba(var(--s-verified),.55),   0 0 34px -12px rgba(var(--s-verified),.5) }
+.ae-card[data-k=failed]{     box-shadow:inset 0 1px 0 rgba(255,255,255,.14), inset 0 0 24px -10px rgba(var(--s-failed),.55),     0 0 34px -12px rgba(var(--s-failed),.5) }
+.ae-card[data-k=unverified]{ box-shadow:inset 0 1px 0 rgba(255,255,255,.14), inset 0 0 24px -10px rgba(var(--s-unverified),.55), 0 0 34px -12px rgba(var(--s-unverified),.5) }
+.ae-card[data-k=blocked]{    box-shadow:inset 0 1px 0 rgba(255,255,255,.14), inset 0 0 30px -10px rgba(var(--s-blocked),.7),     0 0 44px -12px rgba(var(--s-blocked),.6) }
+.ae-card .head{ display:flex;align-items:center;justify-content:space-between;gap:12px }
+.ae-card .step{ font-size:var(--t-micro);font-weight:650;letter-spacing:var(--t-micro-ls);
+  text-transform:uppercase;color:rgba(255,255,255,.30) }
+.ae-card .intent{ font-size:var(--t-body);font-weight:var(--t-body-w);letter-spacing:var(--t-body-ls);
+  line-height:var(--t-body-lh);color:rgba(255,255,255,.92);text-wrap:pretty }
+
+/* evidence: the machine's own words. this box is the product. */
+.ae-ev{ border-radius:11px;padding:10px 12px;background:rgba(0,0,0,.30);
+  border:.5px solid rgba(255,255,255,.05);box-shadow:inset 0 1px 0 rgba(255,255,255,.045);
+  display:flex;flex-direction:column;gap:5px }
+.ae-ev .lbl{ font-size:9px;font-weight:650;letter-spacing:.13em;text-transform:uppercase;
+  color:rgba(255,255,255,.26) }
+.ae-ev .val{ font-size:var(--t-ev);font-weight:var(--t-ev-w);letter-spacing:var(--t-ev-ls);
+  line-height:19px;color:rgba(255,255,255,.82);word-break:break-word }
+.ae-ev .val.pending{ color:rgba(255,255,255,.32) }
+
+.ae-chip{ display:inline-flex;align-items:center;gap:7px;height:22px;padding:0 10px 0 8px;
+  border-radius:999px;font-size:9.5px;font-weight:650;letter-spacing:.1em;text-transform:uppercase;
+  background:rgba(255,255,255,.045);border:.5px solid rgba(255,255,255,.08);
+  color:rgba(255,255,255,.62);white-space:nowrap;flex-shrink:0;transition:all 300ms var(--ease) }
+.ae-chip .g{ width:7px;height:7px;flex-shrink:0;background:rgba(255,255,255,.35);border-radius:50% }
+.ae-chip[data-k=waiting] .g{ background:none;border:1px solid rgba(255,255,255,.4) }
+.ae-chip[data-k=verified]{ color:rgba(var(--s-verified),.92);box-shadow:0 0 16px -4px rgba(var(--s-verified),.6) }
+.ae-chip[data-k=verified] .g{ background:rgb(var(--s-verified));box-shadow:0 0 10px rgba(var(--s-verified),.95) }
+.ae-chip[data-k=failed]{ color:rgba(var(--s-failed),.95);box-shadow:0 0 16px -4px rgba(var(--s-failed),.6) }
+.ae-chip[data-k=failed] .g{ background:rgb(var(--s-failed));border-radius:2px;box-shadow:0 0 10px rgba(var(--s-failed),.95) }
+.ae-chip[data-k=unverified]{ color:rgba(var(--s-unverified),.95);box-shadow:0 0 16px -4px rgba(var(--s-unverified),.6) }
+.ae-chip[data-k=unverified] .g{ background:rgb(var(--s-unverified));border-radius:0;
+  clip-path:polygon(50% 0,100% 100%,0 100%);box-shadow:0 0 10px rgba(var(--s-unverified),.95) }
+.ae-chip[data-k=blocked]{ color:rgba(var(--s-blocked),.95);box-shadow:0 0 18px -4px rgba(var(--s-blocked),.7) }
+.ae-chip[data-k=blocked] .g{ background:rgb(var(--s-blocked));border-radius:1px;
+  box-shadow:inset 2px 0 0 rgba(12,14,18,.95), 0 0 10px rgba(var(--s-blocked),.95) }
+
+.ae-why{ font-size:var(--t-why);font-weight:600;letter-spacing:.015em;line-height:var(--t-why-lh);
+  color:rgba(255,255,255,.56);text-wrap:pretty }
+
+.ae-yn{ display:flex;align-items:center;gap:8px }
+.ae-yn button{ font-family:inherit;font-size:13px;font-weight:650;letter-spacing:.015em;
+  height:36px;padding:0 16px;border-radius:11px;cursor:pointer;border:.5px solid transparent;
+  transition:all 220ms var(--ease) }
+.ae-yn .yes{ color:rgba(255,255,255,.95);background:rgba(var(--s-blocked),.22);
+  border-color:rgba(var(--s-blocked),.5);box-shadow:0 0 22px -6px rgba(var(--s-blocked),.85) }
+.ae-yn .yes:hover{ background:rgba(var(--s-blocked),.32);box-shadow:0 0 26px -4px rgba(var(--s-blocked),1) }
+.ae-yn .no{ color:rgba(255,255,255,.70);background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.10) }
+.ae-yn .no:hover{ background:rgba(255,255,255,.09) }
+.ae-yn .timer{ margin-left:auto;font-size:10px;font-weight:600;letter-spacing:.04em;color:rgba(255,255,255,.32) }
+
+.ae-end{ display:flex;flex-direction:column;gap:9px;border-radius:16px;padding:16px;
+  background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.015));
+  border:.5px solid rgba(255,255,255,.09) }
+.ae-end .t{ font-size:var(--t-body);font-weight:700;letter-spacing:var(--t-body-ls);line-height:var(--t-body-lh) }
+.ae-end .s{ font-size:var(--t-why);font-weight:600;letter-spacing:.015em;line-height:var(--t-why-lh);
+  color:rgba(255,255,255,.58);text-wrap:pretty }
+.ae-end[data-k=verified]{ box-shadow:inset 0 0 26px -10px rgba(var(--s-verified),.6), 0 0 40px -14px rgba(var(--s-verified),.55) }
+.ae-end[data-k=verified] .t{ color:rgba(var(--s-verified),.95) }
+.ae-end[data-k=stopped]{ box-shadow:inset 0 0 26px -10px rgba(var(--s-unverified),.6), 0 0 40px -14px rgba(var(--s-unverified),.55) }
+.ae-end[data-k=stopped] .t{ color:rgba(var(--s-unverified),.95) }
+
+.ae-foot{ display:flex;flex-direction:column;gap:14px }
+.ae-foot .rule{ height:.5px;margin:0 -24px;background:rgba(255,255,255,.07) }
+.ae-foot .line{ display:flex;align-items:center;gap:8px }
+.ae-foot .d{ width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.20);flex-shrink:0 }
+.ae-foot .t{ font-size:10px;font-weight:600;letter-spacing:.04em;color:rgba(255,255,255,.30) }
+.ae-foot[data-problem="1"] .d{ background:rgb(var(--s-failed));box-shadow:0 0 10px rgba(var(--s-failed),.9) }
+.ae-foot[data-problem="1"] .t{ color:rgba(var(--s-failed),.9) }
+
+@keyframes ae-in-l{ from{opacity:0;transform:translateX(-20px)} to{opacity:1;transform:none} }
+@keyframes ae-in-r{ from{opacity:0;transform:translateX(20px)}  to{opacity:1;transform:none} }
+@keyframes ae-in-u{ from{opacity:0;transform:translateY(7px) scale(.985)} to{opacity:1;transform:none} }
+.ae-stage[data-dir=prev]>*{ animation:ae-in-l 300ms var(--ease) }
+.ae-stage[data-dir=next]>*{ animation:ae-in-r 300ms var(--ease) }
+.ae-stage[data-dir=new] >*{ animation:ae-in-u 300ms var(--ease) }
+@media (prefers-reduced-motion:reduce){ .ae-host *{animation:none!important;transition-duration:.01ms!important} }
+/* ==== END PANEL CSS ==== */
+</style>
+
+<style>
+/* ==================================================================
+   EVERYTHING THE PAGE ADDS ON TOP OF THE PANEL.
+   The panel's own CSS is above this and is never touched.
+   ================================================================== */
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+html{background:#070a0e}
+body{
+  font-family:var(--font); font-weight:650; letter-spacing:.020em;
+  background:#070a0e; color:#fff; overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ==================================================================
+   THE STAGE
+   The id is camStage, not stage, because the panel markup already
+   carries id="stage" and a duplicate made getElementById hand the
+   panel this element to write its step card into, which deleted the
+   landscape out of the DOM.
+   ================================================================== */
+#camStage{position:fixed; inset:0; overflow:hidden; z-index:0; background:#070a0e}
+#world{
+  position:absolute; top:0; left:0; display:block;
+  transform-origin:50% 100%;      /* the ground grows toward you */
+  will-change:transform;          /* on the moving layer ONLY */
+  backface-visibility:hidden;
+}
+#scrim{
+  position:absolute; inset:0; pointer-events:none; opacity:0;
+  background:radial-gradient(62% 52% at 50% 42%,
+    rgba(6,12,22,.62) 0%, rgba(6,12,22,.34) 44%, rgba(6,12,22,0) 78%);
+}
+#spacer{position:relative; z-index:2; pointer-events:none}
+
+/* ==================================================================
+   OVERLAYS
+   ================================================================== */
+.ov{
+  position:fixed; inset:0; z-index:3; pointer-events:none;
+  display:flex; align-items:center; justify-content:center;
+  padding:0 max(16px,3vw); opacity:0; will-change:opacity,transform;
+}
+.ov .in{max-width:900px; width:100%; margin:0 auto; text-align:center}
+.ov .in.wide{max-width:min(1800px,96vw)}
+.ov .in.lift{transform:translateY(-7vh)}
+
+.wm{
+  font-size:clamp(66px,15vw,260px); font-weight:650; letter-spacing:-.048em;
+  line-height:.9; margin:0; text-shadow:0 8px 60px rgba(0,0,0,.55);
+}
+.sub{
+  font-size:clamp(15px,1.7vw,22px); font-weight:650; letter-spacing:.020em;
+  margin:22px auto 0; max-width:34ch; color:rgba(255,255,255,.92);
+  text-shadow:0 2px 24px rgba(0,0,0,.7);
+}
+.kick{
+  font-size:clamp(10px,.78vw,13px); letter-spacing:.2em; text-transform:uppercase;
+  font-weight:650; color:rgba(255,255,255,.75); margin:0 0 18px;
+  text-shadow:0 2px 18px rgba(0,0,0,.8);
+}
+h2{
+  font-size:clamp(24px,3.6vw,46px); font-weight:650; letter-spacing:-.026em;
+  line-height:1.1; margin:0 auto 14px; max-width:20ch;
+  text-shadow:0 4px 40px rgba(0,0,0,.6);
+}
+h2.big{ font-size:clamp(34px,5vw,88px); max-width:14ch; margin-bottom:28px; line-height:1.02 }
+.claim-a{color:rgba(255,255,255,.95)}
+.claim-b{color:rgba(245,211,160,.98); margin-top:14px}
+
+/* The lead in and the demo captions are deliberately the SAME size,
+   weight and backing. They are one sentence with the demo in between,
+   so they must not look like two different kinds of text. */
+.leadline{
+  position:relative; margin:0 auto; max-width:24ch;
+  font-size:clamp(20px,2.2vw,38px); line-height:1.2; font-weight:650; letter-spacing:-.018em;
+  color:#fff; text-shadow:0 2px 10px rgba(0,0,0,.85), 0 8px 44px rgba(0,0,0,.7);
+}
+.leadline::before{
+  content:''; position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+  width:130%; height:280%; pointer-events:none; z-index:-1;
+  background:radial-gradient(52% 50% at 50% 50%,
+    rgba(4,10,18,.60) 0%, rgba(4,10,18,.26) 46%, rgba(4,10,18,0) 74%);
+}
+.lensline{
+  font-size:clamp(17px,2vw,30px); font-weight:650; letter-spacing:.020em;
+  line-height:1.32; margin:0 auto; max-width:26ch; color:rgba(255,255,255,.96);
+  text-shadow:0 4px 40px rgba(0,0,0,.65);
+}
+.keys{
+  margin:clamp(14px,2vh,22px) auto 0; font-size:clamp(13px,1.1vw,16px);
+  color:rgba(255,255,255,.72); text-shadow:0 2px 18px rgba(0,0,0,.8);
+}
+.keys .k{
+  display:inline-block; padding:3px 10px; margin:0 3px; border-radius:8px;
+  background:rgba(255,255,255,.12); border:.5px solid rgba(255,255,255,.2);
+  font-size:.92em; color:rgba(255,255,255,.96);
+}
+
+/* ==================================================================
+   THE INTRODUCTION LENS
+   The container carries the SCALED height. The panel scales the
+   indicator with a transform, and a transform does not change layout,
+   so the box stayed 58px tall while it painted at 209px and the line
+   underneath was measured from the wrong edge and sat on the lens.
+   ================================================================== */
+#introLens{
+  --ind-scale:3.6;
+  display:flex; align-items:center; justify-content:center;
+  height:calc(58px * var(--ind-scale));
+  margin:0 auto clamp(26px,4vh,52px);
+  filter:drop-shadow(0 40px 80px rgba(0,0,0,.6));
+}
+#introLens .skin{ display:none !important }
+#introLens .skin-aperture{ display:flex !important }
+@media (max-height:820px){ #introLens{ --ind-scale:2.8 } }
+@media (max-height:660px){ #introLens{ --ind-scale:2.2 } }
+@media (max-width:640px){ #introLens{ --ind-scale:2.1 } }
+
+/* ==================================================================
+   THREE LOOKS, SEVEN STATES.  21 cells, every one live.
+   ================================================================== */
+.grid{ width:min(1680px,97vw); margin:clamp(16px,2.4vh,34px) auto 0 }
+.grow{ margin-bottom:clamp(10px,1.6vh,22px) }
+.grow:last-child{ margin-bottom:0 }
+.grow .rowname{
+  font-size:clamp(9.5px,.8vw,13px); letter-spacing:.18em; text-transform:uppercase;
+  color:rgba(255,255,255,.55); margin:0 0 clamp(5px,.8vh,10px); text-align:left;
+  text-shadow:0 2px 14px rgba(0,0,0,.85);
+}
+.cells{ display:grid; grid-template-columns:repeat(7,1fr); gap:clamp(6px,.7vw,14px) }
+.cell{
+  padding:clamp(10px,1.4vh,20px) 4px clamp(8px,1vh,14px); border-radius:16px; text-align:center;
+  background:linear-gradient(180deg, rgba(255,255,255,.08) 0%, rgba(255,255,255,.02) 32%, rgba(255,255,255,0) 64%),
+    rgba(11,14,19,.84);
+  backdrop-filter:blur(20px) saturate(160%); -webkit-backdrop-filter:blur(20px) saturate(160%);
+  border:.5px solid rgba(255,255,255,.14);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.18), 0 18px 40px -22px rgba(0,0,0,.85);
+}
+/* The scaled indicator needs its BOX to be the painted size, same trap
+   as the introduction lens. And the scale must stay UNITLESS: scale()
+   rejects a length, so clamp(.66,.155vh,1.45) silently voided the whole
+   transform and every cell fell back to 1.0. Height steps instead,
+   because three rows run out of vertical room first. */
+.cell .indicator{ --ind-scale:1.35 }
+.cell .hold{ height:90px; display:flex; align-items:center; justify-content:center }
+@media (max-height:840px){ .cell .indicator{ --ind-scale:1.12 } .cell .hold{ height:76px } }
+@media (max-height:720px){ .cell .indicator{ --ind-scale:.94 } .cell .hold{ height:64px } }
+@media (max-height:600px){ .cell .indicator{ --ind-scale:.76 } .cell .hold{ height:54px } }
+.cell .nm{ margin-top:clamp(6px,.9vh,12px); font-size:clamp(8.5px,.72vw,12px);
+  letter-spacing:.1em; text-transform:uppercase; color:rgba(255,255,255,.46) }
+
+/* The panel's CSS keys off data-skin on an ANCESTOR, and body carries
+   one for the real panel. Without this every cell would paint the
+   aperture on top of its own look. */
+.cell .skin{ display:none !important }
+.cell[data-skin=aperture] .skin-aperture,
+.cell[data-skin=breath]   .skin-breath,
+.cell[data-skin=eyes]     .skin-eyes{ display:flex !important }
+
+@media (max-width:900px){ .cells{ grid-template-columns:repeat(4,1fr) } }
+
+/* ==================================================================
+   THE DEMO: A REAL DESKTOP
+   ------------------------------------------------------------------
+   Laid out once at 1440x600 and scaled to fit, so the three windows
+   can never overlap at any screen size.
+
+   THE BASELINE.  All three sit on one line, y=526. Measured: the panel
+   is bottom anchored and its own bottom lands 74px above the scene
+   floor (18 padding + 44 indicator + 12 gap), so 600-74=526 is the line
+   everything else is hung from. A
+   shared ground line is what makes it read as settled rather than
+   scattered; the old layout had the two windows 20px apart at the top,
+   which is a near miss and reads as a mistake rather than a choice.
+
+   THE RHYTHM.  Notepad 80..560, Calculator 640..942, panel 1022..1422.
+   The three gaps are 80, 80 and 80. Nothing ever covers anything.
+
+   The box went from 800 tall to 600 by deleting the dead space above
+   the windows, which is what lets the whole thing sit lower and away
+   from the top of the browser.
+   ================================================================== */
+#demoWrap{
+  position:fixed; inset:0; z-index:6; pointer-events:none; opacity:0; overflow:hidden;
+  display:flex; align-items:center; justify-content:center;
+  will-change:opacity;
+}
+.demoinner{ width:100%; display:flex; flex-direction:column; align-items:center }
+.demofoot{ position:relative; margin-top:clamp(14px,2vh,30px); width:min(1000px,92vw); text-align:center }
+/* A soft pool behind the line, so it holds against sky or sunlit grass
+   without the line itself having to shout. Same reason the hero has
+   one: white type must never lean on text-shadow alone. */
+.demofoot::before{
+  content:''; position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+  width:120%; height:200%; pointer-events:none;
+  background:radial-gradient(54% 50% at 50% 50%,
+    rgba(4,10,18,.60) 0%, rgba(4,10,18,.26) 46%, rgba(4,10,18,0) 74%);
+}
+.demofoot > *{ position:relative }
+/* the label steps back so the line it introduces can step forward */
+.demokick{ margin:0 0 clamp(8px,1.1vh,15px); color:rgba(255,255,255,.5) }
+/* Every caption is drawn stacked and cross faded, so one never blinks
+   out before the next arrives. Each line is lifted word for word from
+   the brief and lands on the beat that proves it. */
+.democaps{ position:relative; height:clamp(58px,7.2vh,100px) }
+.democap{
+  position:absolute; inset:0; margin:0;
+  display:flex; align-items:center; justify-content:center;
+  font-size:clamp(20px,2.2vw,38px); line-height:1.2; font-weight:650; letter-spacing:-.018em;
+  color:#fff;
+  text-shadow:0 2px 10px rgba(0,0,0,.85), 0 8px 44px rgba(0,0,0,.7);
+  opacity:0; transform:translateY(10px);
+  transition:opacity .45s var(--ease), transform .45s var(--ease);
+}
+.democap.on{ opacity:1; transform:none }
+
+/* ==================================================================
+   THE DEMO BAND
+   ------------------------------------------------------------------
+   Not a card. A rectangular band the full width of the frame, so its
+   left and right edges run off screen and only the top and bottom
+   rules are ever seen. Transparent: the valley reads through it.
+
+   The material is the app's own liquid glass, from the tokens table:
+   layered translucency, blur and saturate, and a bright specular
+   highlight on the TOP edge only. The bottom is a plain hairline.
+   Colour never fills the shape, it sits behind the glass.
+   ================================================================== */
+.demoband{ position:relative; width:100%; padding:clamp(14px,2.2vh,32px) 0 }
+/* The surface is a pseudo element so the overhang PAINTS past the frame
+   without widening the box. Widening the box shifted the whole desktop
+   12px off centre, because the wrapper centres on the box, not on what
+   is drawn. #demoWrap clips, so the side edges are never seen. */
+.demoband::before{
+  content:''; position:absolute; inset:0 -60px; pointer-events:none;
+  border-top:1px solid rgba(255,255,255,.30);
+  border-bottom:1px solid rgba(255,255,255,.15);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.055) 0%, rgba(255,255,255,.012) 26%, rgba(255,255,255,0) 58%),
+    linear-gradient(180deg, rgba(6,12,22,.18) 0%, rgba(6,12,22,.34) 55%, rgba(6,12,22,.18) 100%);
+  backdrop-filter:blur(18px) saturate(150%);
+  -webkit-backdrop-filter:blur(18px) saturate(150%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.26);
+}
+/* the desktop paints above the surface */
+.demoband > *{ position:relative }
+.scene-wrap{ display:flex; justify-content:center; margin:0 auto }
+
+/* The desktop itself carries no surface any more. The band is the
+   surface; the windows sit straight on it. */
+/* width and height are written from T.SCENE_W and T.SCENE_H in
+   fitScene, so the CSS and the maths can never disagree. They did:
+   the CSS said 620 while the script said 580, and the panel's bottom
+   stayed put while everything else moved. */
+.scene{
+  position:relative; flex:none;
+  transform-origin:top center;
+}
+
+/* The panel ships as a fixed corner overlay. Here it has to sit in the
+   bottom right of the SCENE instead, so it can never cover a window.
+   An id beats the panel's own [data-corner=br] rule without editing it. */
+#demoScene .ae-host{
+  position:absolute; inset:auto 0 0 auto; z-index:6;
+  padding:0 18px 18px 0;
+  flex-direction:column-reverse; align-items:flex-end; gap:12px;
+}
+#demoScene .ae-panel{ pointer-events:auto }
+
+/* --- shared window chrome, real Windows 11 --- */
+.win{
+  position:absolute; border-radius:8px; overflow:hidden;
+  background:#202020; border:1px solid rgba(255,255,255,.09);
+  box-shadow:0 40px 90px -20px rgba(0,0,0,.8), 0 4px 14px rgba(0,0,0,.45);
+  transition:opacity .45s var(--ease), transform .45s var(--ease);
+}
+.win .bar{
+  height:32px; display:flex; align-items:center; gap:8px;
+  padding:0 0 0 12px; background:#202020;
+  font-size:12px; font-weight:650; color:rgba(255,255,255,.9);
+}
+.win .bar .sp{ flex:1 }
+.win .bar .wb{
+  width:46px; height:32px; display:flex; align-items:center; justify-content:center;
+  font-size:11px; color:rgba(255,255,255,.78);
+}
+
+/* --- Calculator. Real geometry, captured from this machine. ---
+   The real window is 419x675, which towers over the 400 wide panel and
+   unbalances the scene. Shown at 0.72, the way a smaller window sits on
+   a desktop: 302x486, at 580..882. */
+.calc{ left:640px; top:40px; width:419px; height:675px; transform-origin:top left }
+.calc .body{ position:relative; height:calc(100% - 32px) }
+.c-el{
+  position:absolute; display:flex; align-items:center; justify-content:center;
+  border-radius:4px; color:#fff; font-weight:600;
+}
+.c-el.dig{ background:#3b3b3b; font-size:20px }
+.c-el.fn,.c-el.op{ background:#323232; font-size:17px }
+.c-el.eq{ background:#4cc2ff; color:#001e2d; font-size:20px }
+.c-el.mem{ background:none; font-size:13px; font-weight:650; color:rgba(255,255,255,.92) }
+.c-el.mem.dis{ color:rgba(255,255,255,.3) }
+.c-el.chrome{ background:none; font-size:13px; color:rgba(255,255,255,.82) }
+.c-el.mode{ justify-content:flex-start; background:none; font-size:15px; font-weight:650 }
+.c-el.disp{
+  justify-content:flex-end; align-items:flex-end; background:none;
+  font-size:44px; font-weight:600; padding:0 14px 4px 0; letter-spacing:0;
+}
+
+/* --- Notepad. Real Windows 11 structure: tab strip, then File Edit
+       View, then the text area. --- */
+.note{ left:80px; top:126px; width:480px; height:400px }
+.note .tabs{
+  height:32px; display:flex; align-items:stretch; gap:2px; padding:0 8px;
+  background:#202020; border-bottom:1px solid rgba(255,255,255,.06);
+}
+.note .tab{
+  display:flex; align-items:center; gap:8px; padding:0 12px;
+  background:#2b2b2b; border-radius:6px 6px 0 0;
+  font-size:11.5px; color:rgba(255,255,255,.88);
+}
+.note .menu{
+  height:32px; display:flex; align-items:center; gap:4px; padding:0 8px;
+  background:#202020; font-size:12px; color:rgba(255,255,255,.8);
+}
+.note .menu span{ padding:4px 8px; border-radius:4px }
+.note .text{
+  position:relative; height:calc(100% - 96px); padding:12px 14px;
+  background:#2b2b2b; color:#fff;
+  font-family:ui-monospace,Consolas,'Courier New',monospace;
+  font-size:14px; line-height:21px; white-space:pre-wrap; text-align:left;
+}
+.note .caret{
+  display:inline-block; width:1px; height:16px; margin-left:1px;
+  background:#fff; vertical-align:-3px;
+}
+
+/* Scrolling back replays the run from the start, because the panel's
+   state machine can only add steps. Kill every transition while that
+   happens so it lands as one frame instead of a stampede. */
+body.rebuilding *,
+body.rebuilding *::before,
+body.rebuilding *::after{ transition:none !important; animation:none !important }
+
+/* ==================================================================
+   WHERE IT STANDS
+   ================================================================== */
+.two{ display:grid; grid-template-columns:repeat(auto-fit,minmax(340px,1fr));
+  gap:clamp(16px,1.6vw,32px); width:100%; margin:0 auto; text-align:left }
+.box{
+  padding:clamp(26px,2.2vw,46px); border-radius:22px;
+  background:linear-gradient(180deg, rgba(255,255,255,.075) 0%, rgba(255,255,255,.018) 34%, rgba(255,255,255,0) 66%),
+    rgba(11,14,19,.80);
+  backdrop-filter:blur(24px) saturate(160%); -webkit-backdrop-filter:blur(24px) saturate(160%);
+  border:.5px solid rgba(255,255,255,.14);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.20), 0 30px 60px -26px rgba(0,0,0,.85);
+}
+.box h3{ margin:0 0 clamp(18px,1.5vw,28px); font-size:clamp(10.5px,.8vw,14px);
+  letter-spacing:.18em; text-transform:uppercase; font-weight:650; color:rgba(255,255,255,.52) }
+.box ul{ margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:clamp(14px,1.2vw,22px) }
+.box li{ position:relative; padding-left:22px; font-size:clamp(16px,1.15vw,23px); line-height:1.48;
+  font-weight:650; letter-spacing:.020em; color:rgba(255,255,255,.92) }
+.box li::before{ content:''; position:absolute; left:0; top:.6em; width:7px; height:7px;
+  border-radius:50%; background:rgba(var(--accent),.7) }
+.box.cannot li::before{ background:rgba(255,255,255,.28) }
+
+/* ==================================================================
+   THE WAITLIST
+   ================================================================== */
+.join{ width:min(780px,86vw); margin:0 auto; text-align:left }
+.field{ display:block; margin-bottom:clamp(14px,1.2vw,20px) }
+.field .lbl{ display:block; font-size:clamp(10.5px,.8vw,13px); letter-spacing:.16em;
+  text-transform:uppercase; color:rgba(255,255,255,.58); margin-bottom:8px }
+.field .opt{ color:rgba(255,255,255,.34) }
+.join input, .join textarea{
+  width:100%; padding:clamp(15px,1.2vw,22px) clamp(18px,1.4vw,28px); border-radius:16px;
+  font-family:inherit; font-size:clamp(16px,1.05vw,21px); font-weight:650; letter-spacing:.020em;
+  color:rgba(255,255,255,.96); background:rgba(8,12,18,.62);
+  border:.5px solid rgba(255,255,255,.2); outline:none;
+  backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px);
+}
+.join textarea{ display:block; resize:vertical; line-height:1.5 }
+.join input::placeholder, .join textarea::placeholder{ color:rgba(255,255,255,.34) }
+.join input:focus-visible, .join textarea:focus-visible{ border-color:rgba(var(--accent),.7); box-shadow:0 0 0 3px rgba(var(--accent),.2) }
+.hint{ margin:-4px 0 clamp(14px,1.2vw,20px); font-size:clamp(12.5px,.85vw,15px); line-height:1.5;
+  color:rgba(255,255,255,.42) }
+.join button{
+  width:100%; margin-top:8px; padding:clamp(16px,1.3vw,24px) 24px; border-radius:16px; cursor:pointer;
+  font-family:inherit; font-size:clamp(16px,1.05vw,21px); font-weight:650; letter-spacing:.020em;
+  color:#1a1204; background:rgb(var(--accent)); border:0;
+  transition:filter .3s var(--ease);
+}
+.join button:hover{ filter:brightness(1.08) }
+.join button:focus-visible{ outline:2px solid rgb(var(--accent)); outline-offset:3px }
+.done{ margin-top:18px; font-size:clamp(16px,1.05vw,21px); line-height:1.55;
+  color:rgb(var(--s-verified)); text-align:center }
+.err{ margin-top:10px; font-size:clamp(13px,.9vw,16px); line-height:1.5; color:rgb(var(--s-failed)); text-align:center }
+[hidden]{ display:none !important }
+/* the honeypot. Off screen rather than display:none, because some bots
+   skip anything that is not rendered. */
+.nope{ position:absolute; left:-9999px; width:1px; height:1px; opacity:0; pointer-events:none }
+.foot{ margin-top:clamp(28px,2.4vw,44px); font-size:clamp(14px,.95vw,18px); line-height:1.5;
+  color:rgba(255,255,255,.64); text-shadow:0 2px 18px rgba(0,0,0,.8); text-align:center }
+.foot a{ color:rgba(245,211,160,.92); text-decoration:none; border-bottom:.5px solid rgba(245,211,160,.35) }
+.foot a:hover{ color:rgb(var(--accent)) }
+.foot .sep{ margin:0 14px; color:rgba(255,255,255,.24) }
+
+@media (prefers-reduced-motion: reduce){
+  .ey .pupil,.ey .lid,.ap .core{ transition:none }
+}
+
+
+</style>
+</head>
+<body data-skin="aperture" data-corner="br" data-open="0" data-mode="resting" data-s="ready">
+
+<div id="camStage">
+  <img id="world" src="master-landscape-small.jpg" alt="" fetchpriority="high" decoding="async">
+  <div id="scrim"></div>
+</div>
+
+<!-- 1.  HERO, on the still sky -->
+<div class="ov" id="ovHero"><div class="in lift">
+  <h1 class="wm">Aether</h1>
+  <p class="sub">A voice controlled desktop assistant for Windows.</p>
+</div></div>
+
+<!-- 2.  THE LENS, INTRODUCED.  Hotkey and lens in one. At rest.
+        No callouts. Its dot follows the pointer. On a camera hold. -->
+<div class="ov" id="ovLens"><div class="in">
+  <div id="introLens">
+    <div class="indicator">
+      <div class="skin skin-aperture ap">
+        <span class="blades"></span><span class="iris"></span><span class="core"></span>
+      </div>
+    </div>
+  </div>
+  <p class="lensline">You hold a hotkey, say what you want, and it operates your computer for you.</p>
+  <p class="keys">Hold <span class="k">Ctrl</span> + <span class="k">Space</span> and say what you want.</p>
+</div></div>
+
+<!-- 3.  THREE LOOKS, SEVEN STATES.  Crossfades straight out of the
+        lens introduction with no gap, on the same hold. -->
+<div class="ov" id="ovLooks"><div class="in wide">
+  <p class="kick">The lens</p>
+  <h2>Three looks, seven states.</h2>
+  <div class="grid" id="lensGrid"></div>
+</div></div>
+
+<!-- 4.  THE LEAD IN.  Says what you are about to watch, in the same
+        voice and at the same size as the lines that run underneath
+        the demo itself, so the two read as one thought. -->
+<div class="ov" id="ovLead"><div class="in">
+  <p class="leadline">Let us see how it works. Let us give it one real, simple task.</p>
+</div></div>
+
+<!-- 5.  THE DEMO.  A real desktop, and the real panel working on it.
+        Every Calculator rectangle is spliced from the captured
+        accessibility tree of a real window on this machine. -->
+<div id="demoWrap">
+  <div class="demoinner">
+    <div class="demoband">
+    <div class="scene-wrap">
+      <div class="scene" id="demoScene">
+
+        <div class="win note" id="noteWin">
+          <div class="bar">
+            <span id="noteTitle">Untitled - Notepad</span>
+            <span class="sp"></span>
+            <span class="wb">&#8211;</span><span class="wb">&#9633;</span><span class="wb x">&#10005;</span>
+          </div>
+          <div class="tabs"><span class="tab" id="noteTab">Untitled</span></div>
+          <div class="menu"><span>File</span><span>Edit</span><span>View</span></div>
+          <div class="text"><span id="noteText"></span><span class="caret"></span></div>
+        </div>
+
+        <div class="win calc" id="calcWin">
+          <div class="bar">
+            <span>Calculator</span>
+            <span class="sp"></span>
+            <span class="wb">&#8211;</span><span class="wb">&#9633;</span><span class="wb x">&#10005;</span>
+          </div>
+          <div class="body" id="calcBody"></div>
+        </div>
+
+<!-- ==== SPLICED PANEL MARKUP, BYTE IDENTICAL ==== -->
+<!-- ===== THE WHOLE UI. everything below ships. ===== -->
+<div class="ae-host">
+
+  <button class="ae-ind-btn" id="indBtn" aria-label="Aether">
+    <div class="indicator" id="indicator">
+      <div class="skin skin-aperture ap">
+        <span class="blades"></span><span class="iris"></span><span class="core"></span>
+      </div>
+      <div class="skin skin-breath br"></div>
+      <div class="skin skin-eyes ey">
+        <span class="eye"><i class="lid t"></i><i class="pupil"></i><i class="lid b"></i></span>
+        <span class="eye"><i class="lid t"></i><i class="pupil"></i><i class="lid b"></i></span>
+      </div>
+    </div>
+  </button>
+
+  <div class="ae-panel lg" id="panel">
+
+    <!-- resting -->
+    <div class="ae-mode" id="restMode">
+      <div class="ae-rest-top">
+        <div class="ae-hot">Hold <span class="ae-key">Ctrl</span> <span class="ae-plus">+</span>
+          <span class="ae-key">Space</span> and say what you want.</div>
+        <input class="ae-input" id="typeIn" type="text" placeholder="Or type it here">
+      </div>
+      <div class="ae-egs">
+        <div>open Notepad and write today's plan</div>
+        <div>search for the top AI news and save it</div>
+        <div>open Calculator and work out 18 percent of 4500</div>
+      </div>
+    </div>
+
+    <!-- running -->
+    <div class="ae-mode" id="runMode">
+      <div class="ae-goal">
+        <div class="lbl">You said</div>
+        <div class="txt" id="goal"></div>
+      </div>
+      <div class="ae-dots">
+        <div class="track" id="dots"></div>
+        <button class="ae-now" id="nowBtn">Now</button>
+      </div>
+      <div class="ae-stage" id="stage" data-dir="new"></div>
+    </div>
+
+    <div class="ae-foot" id="foot" data-problem="0">
+      <div class="rule"></div>
+      <div class="line"><span class="d"></span><span class="t" id="footText">Microphone and hotkey are working.</span></div>
+    </div>
+
+  </div>
+</div>
+<!-- ==== END PANEL MARKUP ==== -->
+
+      </div>
+    </div>
+    </div>
+    <div class="demofoot" id="demoFoot">
+      <p class="kick demokick">A real run, driven by your scroll</p>
+      <div class="democaps" id="demoCaps"></div>
+    </div>
+  </div>
+</div>
+
+<!-- 5.  THE CLAIM, later on the same K2 hold -->
+<div class="ov" id="ovClaim"><div class="in">
+  <p class="kick">What makes it different</p>
+  <h2 class="claim-a">Every other assistant clicks a button and tells you it worked.</h2>
+  <h2 class="claim-b">Aether reads the screen back and shows you what it actually found.</h2>
+</div></div>
+
+<!-- 6.  WHERE IT STANDS, on the K3 hold -->
+<div class="ov" id="ovDoes"><div class="in wide">
+  <p class="kick">Where it stands</p>
+  <div class="two">
+    <div class="box does">
+      <h3>What it does</h3>
+      <ul>
+        <li>It reads what is on your screen, not a picture of it</li>
+        <li>It does one thing at a time</li>
+        <li>It checks the screen again before moving on</li>
+      </ul>
+    </div>
+    <div class="box cannot">
+      <h3>What it cannot do yet</h3>
+      <ul>
+        <li>It cannot use websites yet. It opens your browser, it does not drive the page.</li>
+        <li>It will never type a password. It stops and hands the keyboard back to you.</li>
+        <li>Windows only for now.</li>
+        <li>It is not finished. You are joining a waitlist, not buying a product.</li>
+      </ul>
+    </div>
+  </div>
+</div></div>
+
+<!-- 7.  THE WAITLIST, on its own K4 hold, a camera move later -->
+<div class="ov" id="ovJoin"><div class="in wide">
+  <h2 class="big">Join the waitlist.</h2>
+  <form class="join" id="joinForm" novalidate>
+    <label class="field">
+      <span class="lbl">Email</span>
+      <input type="email" name="email" required autocomplete="email" placeholder="you@example.com">
+    </label>
+    <label class="field">
+      <span class="lbl">Phone <span class="opt">optional</span></span>
+      <input type="tel" name="phone" autocomplete="tel" placeholder="Leave blank if you prefer">
+    </label>
+    <label class="field">
+      <span class="lbl">What are you hoping Aether solves for you? <span class="opt">optional</span></span>
+      <textarea name="problem" rows="2" placeholder="Whatever's on your mind"></textarea>
+    </label>
+    <p class="hint">We'll personally reach out about it, on X, email, or whatever you left above.</p>
+    <input type="hidden" name="utm_source">
+    <input type="hidden" name="utm_medium">
+    <input type="hidden" name="utm_campaign">
+    <input type="text" name="company" class="nope" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <button type="submit">Join the waitlist</button>
+    <p class="err" id="joinErr" hidden></p>
+    <p class="done" id="joinDone" hidden>You are on the list. I will email you when it is ready, and nothing else.</p>
+  </form>
+  <p class="foot">
+    <a href="mailto:navmeetbhullarsaab@gmail.com">navmeetbhullarsaab@gmail.com</a>
+    <span class="sep">/</span>
+    <a href="https://x.com/Navmeet_Bhullar" target="_blank" rel="noopener noreferrer">@Navmeet_Bhullar</a>
+  </p>
+</div></div>
+
+<div id="spacer"></div>
+
+
+
+<script>
+/* ==== SPLICED AE STATE MACHINE, BYTE IDENTICAL ==== */
+/* ================================================================
+   AETHER PANEL  -  one state machine for the indicator and the panel,
+   so the corner and the panel can never disagree.
+   ================================================================ */
+const AE = (function(){
+  const $ = id => document.getElementById(id);
+  const B = document.body;
+  const CHIP = { waiting:'Waiting', verified:'Verified', failed:'Failed',
+                 unverified:'Not verified', blocked:'Needs you' };
+  const IND = ['ready','listening','working','needsYou','completed','stopped','problem'];
+
+  let m = { goal:'', steps:[], live:-1, cursor:-1, following:true,
+            ended:null, locked:false, ask:null, problem:null };
+  let completedTimer=null, askTimer=null;
+
+  const chip = k => `<span class="ae-chip" data-k="${k}"><span class="g"></span>${CHIP[k]}</span>`;
+  const past = s => s.intent.replace(/^Open /,'Opened ').replace(/^Click /,'Clicked ')
+                            .replace(/^Type /,'Typed ').replace(/^Save /,'Saved ')
+                            .replace(/^Close /,'Closed ');
+  const maxIndex = ()=> m.steps.length-1+(m.ended?1:0);
+
+  /* ---------- indicator ---------- */
+  function setIndicatorState(state){
+    if(!IND.includes(state)) return;
+    clearTimeout(completedTimer);
+    B.dataset.s = state;
+    if(state==='completed') completedTimer=setTimeout(()=>setIndicatorState('ready'),2500);
+  }
+  function setIndicatorSkin(skin){ if(['aperture','breath','eyes'].includes(skin)) B.dataset.skin=skin; }
+  function setIndicatorCorner(c){ if(['tl','tr','bl','br'].includes(c)) B.dataset.corner=c; }
+
+  /* ---------- panel ---------- */
+  function openPanel(){ B.dataset.open='1'; }
+  function closePanel(){ B.dataset.open='0'; }
+  function togglePanel(){ B.dataset.open = B.dataset.open==='1' ? '0' : '1'; }
+  function showResting(){ B.dataset.mode='resting'; if(!m.problem) setIndicatorState('ready'); }
+
+  /* ---------- dots ---------- */
+  function paintDots(){
+    const dots = m.steps.map((s,n)=>{
+      const c=['ae-dot']; if(s.state) c.push(s.state);
+      if(n===m.live && !m.ended) c.push('live');
+      return `<button class="ae-dothit" data-i="${n}" data-viewing="${n===m.cursor?1:0}"
+                ${m.locked?'disabled':''} aria-label="Step ${n+1}"><span class="${c.join(' ')}"></span></button>`;
+    }).join('');
+    const tail = m.ended
+      ? `<button class="ae-dothit" data-i="${m.steps.length}" data-viewing="${m.cursor===m.steps.length?1:0}"
+           aria-label="Result"><span class="ae-dot summary ${m.ended.kind}"></span></button>`
+      : (m.steps.length ? '<span class="ae-more"></span>' : '');
+    $('dots').innerHTML = dots + tail;
+    $('nowBtn').textContent = m.ended ? 'Result' : 'Now';
+    $('nowBtn').classList.toggle('show', !m.following && !m.locked);
+  }
+
+  function render(dir){
+    const st=$('stage'); st.dataset.dir=dir||'new';
+    if(m.ended && m.cursor===m.steps.length){
+      st.innerHTML=`<div class="ae-end" data-k="${m.ended.kind}">
+        <div class="t">${m.ended.title}</div><div class="s">${m.ended.sentence}</div></div>`;
+      paintDots(); return;
+    }
+    const i=m.cursor, s=m.steps[i];
+    if(!s){ st.innerHTML=''; paintDots(); return; }
+    if(m.ask && m.ask.i===i){ st.innerHTML=m.ask.html; wireAsk(); paintDots(); return; }
+    if(!s.state){
+      st.innerHTML=`<div class="ae-card">
+        <div class="head"><span class="step">Step ${i+1}</span>${chip('waiting')}</div>
+        <div class="intent">${s.intent}</div>
+        <div class="ae-ev"><span class="lbl">I expect to read back</span>
+          <span class="val pending">${s.expect}</span></div></div>`;
+    } else {
+      st.innerHTML=`<div class="ae-card" data-k="${s.state}">
+        <div class="head"><span class="step">Step ${i+1}</span>${chip(s.state)}</div>
+        <div class="intent">${past(s)}</div>
+        <div class="ae-ev">
+          <span class="lbl">${s.state==='unverified'?'What I could read':'Read back off the window'}</span>
+          <span class="val${s.evidence?'':' pending'}">${s.evidence||'Nothing came back.'}</span></div>
+        ${s.reason?`<div class="ae-why">${s.reason}</div>`:''}</div>`;
+    }
+    paintDots();
+  }
+
+  function goto(i,dir){
+    if(m.locked) return;
+    i=Math.max(0,Math.min(maxIndex(),i));
+    if(i===m.cursor) return;
+    const d=dir||(i>m.cursor?'next':'prev');
+    m.cursor=i; m.following=(i===(m.ended?m.steps.length:m.live)); render(d);
+  }
+
+  /* ---------- the run ---------- */
+  function setListening(on){
+    // A real problem outranks the hotkey in BOTH directions. If Aether is not
+    // running, holding the key must not pretend to listen, because nothing you
+    // say can be carried out. Showing 'listening' over a dead server is the
+    // same lie as a green tick on an unchecked action.
+    if(m.problem){ setIndicatorState('problem'); return; }
+    if(on){ setIndicatorState('listening'); return; }
+    // Release must put the corner back. Never leave it stuck on listening.
+    if(document.body.dataset.s !== 'listening') return;     // a run already moved us on
+    setIndicatorState(m.ended ? (m.ended.kind==='verified'?'completed':'stopped')
+                    : (m.live>=0 ? 'working' : 'ready'));
+  }
+
+  function runStart(goal){
+    m={goal,steps:[],live:-1,cursor:-1,following:true,ended:null,locked:false,ask:null,problem:m.problem};
+    $('goal').textContent=goal;
+    $('stage').innerHTML='';
+    B.dataset.mode='running'; openPanel();
+    setIndicatorState('working');
+    paintDots();
+  }
+
+  function runDeclare(intent, expect){
+    m.steps.push({intent,expect,state:null});
+    m.live=m.steps.length-1; m.ended=null; m.ask=null; m.locked=false;
+    setIndicatorState('working');
+    if(m.following){ m.cursor=m.live; render('new'); } else paintDots();
+    return m.live;
+  }
+
+  function runResolve(i,state,evidence,reason){
+    const s=m.steps[i]; if(!s) return;
+    s.state=state; s.evidence=evidence; s.reason=reason||'';
+    m.ask=null; m.locked=false;
+    setIndicatorState('working');
+    if(m.cursor===i) render('new'); else paintDots();
+  }
+
+  function runAsk(intent,question,detail,seconds,onYes,onNo){
+    m.steps.push({intent,expect:'',state:'blocked',evidence:detail});
+    const i=m.steps.length-1;
+    m.live=i; m.cursor=i; m.following=true; m.locked=true;
+    setIndicatorState('needsYou');
+    m.ask={i,left:seconds,onYes,onNo,html:
+      `<div class="ae-card" data-k="blocked">
+        <div class="head"><span class="step">Step ${i+1}</span>${chip('blocked')}</div>
+        <div class="intent">${question}</div>
+        <div class="ae-why">${detail}</div>
+        <div class="ae-yn"><button class="yes" id="aeYes">Yes, do it</button>
+          <button class="no" id="aeNo">No, stop</button>
+          <span class="timer" id="aeTimer">${seconds}s</span></div></div>`};
+    render('new'); return i;
+  }
+
+  function wireAsk(){
+    clearInterval(askTimer); const a=m.ask; if(!a) return;
+    askTimer=setInterval(()=>{ a.left--; const el=$('aeTimer'); if(el) el.textContent=a.left+'s';
+      if(a.left<=0){ clearInterval(askTimer); m.locked=false; m.ask=null; a.onNo&&a.onNo('timeout'); } },1000);
+    $('aeYes').onclick=()=>{ clearInterval(askTimer); m.locked=false; m.ask=null; a.onYes&&a.onYes(); };
+    $('aeNo').onclick =()=>{ clearInterval(askTimer); m.locked=false; m.ask=null; a.onNo&&a.onNo('answered'); };
+  }
+
+  function runEnd(kind,title,sentence){
+    clearInterval(askTimer);
+    m.ended={kind,title,sentence}; m.locked=false; m.ask=null;
+    m.cursor=m.steps.length; m.following=true;
+    setIndicatorState(kind==='verified' ? 'completed' : 'stopped');
+    render('new');
+  }
+
+  function setProblem(text){
+    m.problem = text || null;
+    $('foot').dataset.problem = text ? '1':'0';
+    $('footText').textContent = text || 'Microphone and hotkey are working.';
+    if(text) setIndicatorState('problem');
+    else if(B.dataset.s==='problem') setIndicatorState('ready');
+  }
+
+  /* ---------- navigation ---------- */
+  $('dots').addEventListener('click',e=>{ const b=e.target.closest('.ae-dothit'); if(b) goto(+b.dataset.i); });
+  $('nowBtn').onclick=()=>{ m.following=true; m.cursor = m.ended ? m.steps.length : m.live; render('next'); };
+
+  const stage=$('stage');
+  let sx=0,sy=0,lx=0,drag=false,axis=null,t0=0;
+  stage.addEventListener('pointerdown',e=>{
+    if(m.locked||e.target.closest('button')) return;
+    sx=lx=e.clientX; sy=e.clientY; drag=true; axis=null; t0=performance.now();
+    stage.classList.add('dragging');
+    const el=stage.firstElementChild; if(el) el.style.willChange='transform,opacity';
+  });
+  stage.addEventListener('mousedown',e=>{ if(e.button===0) e.preventDefault(); });
+  window.addEventListener('pointermove',e=>{
+    if(!drag) return;
+    const dx=e.clientX-sx, dy=e.clientY-sy;
+    if(axis===null && (Math.abs(dx)>=2||Math.abs(dy)>=2)) axis = Math.abs(dx)>=Math.abs(dy)?'x':'y';
+    if(axis==='y') return;
+    if(e.cancelable) e.preventDefault();
+    lx=e.clientX;
+    const atStart=(m.cursor<=0&&dx>0), atEnd=(m.cursor>=maxIndex()&&dx<0);
+    const move=(atStart||atEnd)?dx*0.20:dx;
+    const el=stage.firstElementChild;
+    if(el){ el.style.transform=`translateX(${move.toFixed(2)}px)`;
+            el.style.opacity=String(1-Math.min(.34,Math.abs(move)/560)); }
+  },{passive:false});
+  function onUp(){
+    if(!drag) return;
+    drag=false; stage.classList.remove('dragging');
+    const dx=lx-sx, ms=Math.max(1,performance.now()-t0), speed=Math.abs(dx)/ms;
+    const el=stage.firstElementChild;
+    if(el){ el.style.transition='transform 360ms var(--ease), opacity 260ms ease';
+      el.style.transform=''; el.style.opacity='';
+      const n=el; setTimeout(()=>{ if(n){ n.style.transition=''; n.style.willChange=''; } },380); }
+    if(axis==='x'){
+      const committed = Math.abs(dx)>34 || (Math.abs(dx)>10 && speed>0.45);
+      if(committed){ if(dx<0) goto(m.cursor+1,'next'); else goto(m.cursor-1,'prev'); }
+    }
+    axis=null;
+  }
+  window.addEventListener('pointerup',onUp);
+  window.addEventListener('pointercancel',onUp);
+  window.addEventListener('blur',onUp);
+
+  let wheelLock=false;
+  stage.addEventListener('wheel',e=>{
+    if(m.locked) return;
+    if(Math.abs(e.deltaX)<=Math.abs(e.deltaY)) return;
+    e.preventDefault();
+    if(wheelLock||Math.abs(e.deltaX)<14) return;
+    wheelLock=true; setTimeout(()=>wheelLock=false,420);
+    goto(m.cursor+(e.deltaX>0?1:-1), e.deltaX>0?'next':'prev');
+  },{passive:false});
+
+  document.addEventListener('keydown',e=>{
+    if(B.dataset.mode!=='running'||B.dataset.open!=='1') return;
+    if(e.key==='ArrowLeft')  goto(m.cursor-1,'prev');
+    if(e.key==='ArrowRight') goto(m.cursor+1,'next');
+    if(e.key==='Escape')     closePanel();
+  });
+
+  /* ---------- indicator: click, cursor tracking, blinking ---------- */
+  $('indBtn').onclick = togglePanel;
+
+  const core=document.querySelector('.ap .core');
+  const pupils=[...document.querySelectorAll('.ey .pupil')];
+  document.addEventListener('mousemove',e=>{
+    if(core){
+      const r=core.parentElement.getBoundingClientRect();
+      const cx=r.left+r.width/2, cy=r.top+r.height/2;
+      const a=Math.atan2(e.clientY-cy,e.clientX-cx);
+      const d=Math.min(5,Math.hypot(e.clientX-cx,e.clientY-cy)/26);
+      core.style.marginLeft=(Math.cos(a)*d)+'px';
+      core.style.marginTop =(Math.sin(a)*d)+'px';
+    }
+    pupils.forEach(p=>{
+      const r=p.parentElement.getBoundingClientRect();
+      const cx=r.left+r.width/2, cy=r.top+r.height/2;
+      const a=Math.atan2(e.clientY-cy,e.clientX-cx);
+      const d=Math.min(8,Math.hypot(e.clientX-cx,e.clientY-cy)/16);
+      p.style.transform=`translate(calc(-50% + ${Math.cos(a)*d}px), calc(-50% + ${Math.sin(a)*d}px))`;
+    });
+  });
+  const eyeEls=[...document.querySelectorAll('.ey .eye')];
+  (function blink(){
+    if(B.dataset.skin==='eyes' && !['working','completed','stopped'].includes(B.dataset.s)){
+      eyeEls.forEach(el=>el.classList.add('blink'));
+      setTimeout(()=>eyeEls.forEach(el=>el.classList.remove('blink')),125);
+    }
+    setTimeout(blink, 2400+Math.floor(Math.random()*3800));
+  })();
+
+  return { openPanel, closePanel, togglePanel, showResting,
+           setIndicatorState, setIndicatorSkin, setIndicatorCorner,
+           runStart, runDeclare, runResolve, runAsk, runEnd,
+           setListening, setProblem, get model(){return m} };
+})();
+/* ==== END AE STATE MACHINE ==== */
+</script>
+
+<script>
+(function(){
+"use strict";
+
+/* ==================================================================
+   THE ONE THING TO SWAP BEFORE GOING LIVE
+   ================================================================== */
+var FORM_ENDPOINT = 'https://script.google.com/macros/s/AKfycbzFZScwo73LrRdtEIk1Fj4xXSWt8JP4NACMKa5u1SRdVPBge8D1LTFtRuk9fUw5hpyn/exec';
+
+/* 'sheet' posts to a Google Apps Script web app, which appends a row to
+   a Google Sheet. Free, no row limit worth worrying about, no SDK, no
+   API key in the page, and you get a spreadsheet you can just open.
+
+   'json' posts JSON to Formspree, Tally or anything that speaks it.
+
+   Why 'sheet' sends text/plain: a cross origin POST only skips the
+   CORS preflight when the content type is one of three simple values,
+   and Apps Script cannot answer a preflight OPTIONS. text/plain skips
+   it, and the script parses the body as JSON at the other end. The
+   alternative, mode:'no-cors', makes the response unreadable, which
+   would mean the page could never tell a real send from a failure and
+   would have to claim success either way. It is not going to do that. */
+var FORM_MODE = 'sheet';
+
+/* ==================================================================
+   EVERY NUMBER THAT MATTERS, IN ONE PLACE
+   ================================================================== */
+var T = {
+  IMG_W: 2133,
+  IMG_H: 5777,
+  HORIZON: 0.528,
+  K2_HORIZON_POS: 0.40,
+  FRAME_FRACTION_MAX: 0.36,
+  FINAL_GAP: 0.06,
+
+  K: [0.0000, 0.3203, 0.4449, 0.7323, 0.7923],
+  P: [0.045, 0.16, 0.40, 0.46, 0.86, 0.90, 0.958, 0.974, 1.00],
+
+  SCALE_K3: 1.18,
+  SCALE_K4: 1.30,
+  FOLLOW: 0.10,
+  SNAP_PX: 0.02,
+  LENS_SCALE: 3.6,
+  LENS_TRACK: 9,
+  SCENE_W: 1440,
+  SCENE_H: 600,           /* 526 baseline + the panel's own 74px of chrome */           /* was 800: the dead space above the windows is gone */
+  SCENE_FIT: 0.92,        /* how much of the frame height the demo may use */
+  SCENE_MAX: 2.4,         /* the desktop may be drawn LARGER than its layout size */
+
+  PAGE_VH: 2000,
+  PAGE_VH_NARROW: 1000,
+  NARROW_AT: 760,
+
+  DEMO_RUN: [0.562, 0.775],
+
+  HERO:  [0.00, 0.00, 0.030, 0.045],
+  LENS:  [0.17, 0.195, 0.260, 0.285],
+  LOOKS: [0.26, 0.285, 0.355, 0.385],
+  LEAD:  [0.465, 0.482, 0.518, 0.535],
+  DEMO:  [0.545, 0.562, 0.775, 0.792],
+  CLAIM: [0.802, 0.816, 0.845, 0.858],
+  DOES:  [0.903, 0.918, 0.948, 0.958],
+  JOIN:  [0.976, 0.985, 1.010, 1.020]
+};
+var DEFAULTS = JSON.parse(JSON.stringify(T));
+
+var ASPECT = T.IMG_H / T.IMG_W;
+
+function cl(x,a,b){return x<a?a:x>b?b:x}
+function lerp(a,b,k){return a+(b-a)*k}
+function seg(x,a,b){return b<=a?(x>=b?1:0):cl((x-a)/(b-a),0,1)}
+function sm(x){return x*x*(3-2*x)}
+function ramp(x,a,b){return sm(seg(x,a,b))}
+function band(p,b){return (b[1]<=b[0]?1:ramp(p,b[0],b[1])) * (1-ramp(p,b[2],b[3]))}
+function el(t,c){ var n=document.createElement(t); if(c) n.className=c; return n; }
+
+var reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+var syncNumbers  = function(){};
+var updateHud    = function(){};
+var onScrollHook = function(){};
+var fullLoaded   = false;
+
+/* ---------- elements ---------- */
+var camStage=document.getElementById('camStage'), world=document.getElementById('world'),
+    scrim=document.getElementById('scrim'), spacer=document.getElementById('spacer'),
+    introLens=document.getElementById('introLens'),
+    demoWrap=document.getElementById('demoWrap'), demoScene=document.getElementById('demoScene'),
+    demoBand=document.querySelector('.demoband'), demoFoot=document.getElementById('demoFoot'),
+    calcWin=document.getElementById('calcWin'), noteWin=document.getElementById('noteWin'),
+    noteText=document.getElementById('noteText'), noteTitle=document.getElementById('noteTitle'),
+    noteTab=document.getElementById('noteTab');
+
+var LAYERS = [
+  ['HERO',  document.getElementById('ovHero')],
+  ['LENS',  document.getElementById('ovLens')],
+  ['LOOKS', document.getElementById('ovLooks')],
+  ['LEAD',  document.getElementById('ovLead')],
+  ['CLAIM', document.getElementById('ovClaim')],
+  ['DOES',  document.getElementById('ovDoes')],
+  ['JOIN',  document.getElementById('ovJoin')]
+];
+var joinIn = document.querySelector('#ovJoin .in');
+
+var SW=0, SH=0, IW=0, IH=0, FF=0.2077, narrow=false;
+
+/* ==================================================================
+   THE CALCULATOR
+   Every rectangle and every label below was read off a real Calculator
+   window on this machine with the product's own reader:
+       node test-read-ui.js --title "^Calculator$"
+   Spliced, not retyped. Two columns per row on purpose: the NAME is
+   what Windows reports and what Aether matches on, the GLYPH is what a
+   person sees. That gap is the whole product argument, in a table.
+   ================================================================== */
+/* ==== SPLICED CAPTURED CALCULATOR, BYTE IDENTICAL ==== */
+var CALC = [
+  ['Open Navigation','☰',            12,  7,  40, 36, 'chrome'],
+  ['Standard Calculator mode','Standard', 56, 10,  82, 27, 'mode'],
+  ['Keep on top','⤒',               148,  9,  32, 32, 'chrome'],
+  ['Open history flyout','↺',       371,  9,  32, 32, 'chrome'],
+  ['Display is 0','0',                     8, 79, 403, 97, 'disp'],
+  ['Clear all memory','MC',               12,177,  64, 41, 'mem', 1],
+  ['Memory recall','MR',                  78,177,  64, 41, 'mem', 1],
+  ['Memory add','M+',                    144,177,  64, 41, 'mem'],
+  ['Memory subtract','M−',          210,177,  64, 41, 'mem'],
+  ['Memory store','MS',                  276,177,  64, 41, 'mem'],
+  ['Open memory flyout','Mˇ',       343,177,  64, 41, 'mem', 1],
+  ['Percent','%',                         12,220,  97, 67, 'fn'],
+  ['Clear entry','CE',                   111,220,  97, 67, 'fn'],
+  ['Clear','C',                          210,220,  98, 67, 'fn'],
+  ['Backspace','⌫',                 310,220,  97, 67, 'fn'],
+  ['Reciprocal','1/x',                    12,289,  97, 67, 'fn'],
+  ['Square','x²',                   111,289,  97, 67, 'fn'],
+  ['Square root','²√x',        210,289,  98, 67, 'fn'],
+  ['Divide by','÷',                 310,289,  97, 67, 'op'],
+  ['Seven','7',                           12,358,  97, 67, 'dig'],
+  ['Eight','8',                          111,358,  98, 67, 'dig'],
+  ['Nine','9',                           211,358,  97, 67, 'dig'],
+  ['Multiply by','×',               310,358,  97, 67, 'op'],
+  ['Four','4',                            12,427,  97, 67, 'dig'],
+  ['Five','5',                           111,427,  98, 67, 'dig'],
+  ['Six','6',                            211,427,  97, 67, 'dig'],
+  ['Minus','−',                     310,427,  97, 67, 'op'],
+  ['One','1',                             12,496,  97, 67, 'dig'],
+  ['Two','2',                            111,496,  98, 67, 'dig'],
+  ['Three','3',                          211,496,  97, 67, 'dig'],
+  ['Plus','+',                           310,496,  97, 67, 'op'],
+  ['Positive negative','+/−',        12,565,  97, 66, 'dig'],
+  ['Zero','0',                           111,565,  98, 66, 'dig'],
+  ['Decimal separator','.',              211,565,  97, 66, 'dig'],
+  ['Equals','=',                         310,565,  97, 66, 'eq']
+];
+/* ==== END CAPTURED CALCULATOR ==== */
+
+var calcDisplay = null;
+function buildCalculator(){
+  var body = document.getElementById('calcBody');
+  for (var i=0;i<CALC.length;i++){
+    var r = CALC[i];
+    var n = el('div','c-el ' + r[6] + (r[7] ? ' dis' : ''));
+    n.style.left=r[2]+'px'; n.style.top=r[3]+'px';
+    n.style.width=r[4]+'px'; n.style.height=r[5]+'px';
+    n.textContent = r[1];
+    /* the name Aether reads, on the element itself, so it is inspectable */
+    n.setAttribute('data-ae-name', r[0]);
+    if (r[6] === 'disp') calcDisplay = n;
+    body.appendChild(n);
+  }
+}
+
+/* ==================================================================
+   THE 21 CELLS
+   ================================================================== */
+var LENSES = [['aperture','Aperture'],['breath','Breath'],['eyes','Eyes']];
+var LENS_STATES = ['ready','listening','working','needsYou','completed','stopped','problem'];
+var LENS_LABEL = { ready:'Ready', listening:'Listening', working:'Working',
+                   needsYou:'Needs you', completed:'Completed', stopped:'Stopped',
+                   problem:'Problem' };
+var INDICATOR =
+  '<div class="indicator">' +
+    '<div class="skin skin-aperture ap"><span class="blades"></span><span class="iris"></span><span class="core"></span></div>' +
+    '<div class="skin skin-breath br"></div>' +
+    '<div class="skin skin-eyes ey">' +
+      '<span class="eye"><i class="lid t"></i><i class="pupil"></i><i class="lid b"></i></span>' +
+      '<span class="eye"><i class="lid t"></i><i class="pupil"></i><i class="lid b"></i></span>' +
+    '</div>' +
+  '</div>';
+
+function buildLensGrid(){
+  var root=document.getElementById('lensGrid'), html='';
+  for (var i=0;i<LENSES.length;i++){
+    html += '<div class="grow"><p class="rowname">'+LENSES[i][1]+'</p><div class="cells">';
+    for (var j=0;j<LENS_STATES.length;j++){
+      var s=LENS_STATES[j];
+      html += '<div class="cell" data-skin="'+LENSES[i][0]+'" data-s="'+s+'">' +
+                '<div class="hold">'+INDICATOR+'</div>' +
+                '<div class="nm">'+LENS_LABEL[s]+'</div>' +
+              '</div>';
+    }
+    html += '</div></div>';
+  }
+  root.innerHTML = html;
+}
+
+/* ==================================================================
+   THE DEMO RUN
+   One list of beats. Each carries the state of the DESKTOP as well as
+   the call into the panel, so the windows and the panel can never
+   disagree about what has happened. Scrolling back rebuilds from beat
+   zero, because the panel's state machine can only ever add a step,
+   and it is spliced in untouched so it is not going to learn how.
+   ================================================================== */
+/* Each line lands on the beat that proves it. Every one is from the
+   brief, word for word. */
+var CAPTIONS = [
+  'It does one thing at a time',
+  'It reads what is on your screen, not a picture of it',
+  'It checks the screen again before moving on',
+  'It stops and asks before anything risky',
+  'Most tools show a tick here. That is the moment they lie to you.'
+];
+var capEls = [];
+function buildCaptions(){
+  var root = document.getElementById('demoCaps');
+  for (var i=0;i<CAPTIONS.length;i++){
+    var p = el('p','democap');
+    p.setAttribute('data-cap', String(i));
+    p.textContent = CAPTIONS[i];
+    root.appendChild(p);
+  }
+  capEls = [].slice.call(root.children);
+}
+function paintCaption(i){
+  for (var n=0;n<capEls.length;n++) capEls[n].classList.toggle('on', n === i);
+}
+
+var GOAL = 'work out 18 percent of 4500 and save it in a note';
+var NOTE_TEXT = '18% of 4500 = 810';
+
+var BEATS = [
+  { s:{}, run:function(){ AE.showResting(); AE.closePanel(); AE.setListening(false); } },
+  { s:{}, run:function(){ AE.openPanel(); AE.setListening(true); } },
+  { s:{}, run:function(){ AE.runStart(GOAL); } },
+  { cap:0, s:{}, run:function(){ AE.runDeclare('Open Calculator.','a Calculator window'); } },
+  { cap:1, s:{calc:1}, run:function(){ AE.runResolve(0,'verified','Calculator window is open'); } },
+  { cap:1, s:{calc:1}, run:function(){ AE.runDeclare('Type 4500 times 18 percent.','the display showing 810'); } },
+  { cap:2, s:{calc:1,disp:'810'}, run:function(){ AE.runResolve(1,'verified','Display is 810'); } },
+  { cap:2, s:{calc:1,disp:'810'}, run:function(){ AE.runDeclare('Open Notepad.','a Notepad window'); } },
+  { s:{calc:1,disp:'810',note:1}, run:function(){ AE.runResolve(2,'verified','Notepad window is open'); } },
+  { s:{calc:1,disp:'810',note:1}, run:function(){ AE.runDeclare('Type the answer into the note.',NOTE_TEXT); } },
+  { s:{calc:1,disp:'810',note:1,text:NOTE_TEXT}, run:function(){ AE.runResolve(3,'verified','The text field reads '+NOTE_TEXT); } },
+  { cap:3, s:{calc:1,disp:'810',note:1,text:NOTE_TEXT}, run:function(){
+      AE.runAsk('Save the note.',
+        'Save this note to your Documents folder?',
+        'Saving can replace a file that is already there, so I will not do it on my own.',
+        20, function(){}, function(){}); } },
+  { s:{calc:1,disp:'810',note:1,text:NOTE_TEXT,title:'plan.txt'}, run:function(){
+      var yes=document.getElementById('aeYes'); if(yes) yes.click();
+      AE.runDeclare('Save the note.','the file saved as plan.txt'); } },
+  { cap:4, s:{calc:1,disp:'810',note:1,text:NOTE_TEXT,title:'plan.txt'}, run:function(){
+      AE.runResolve(AE.model.steps.length-1,'unverified','The save window closed',
+        'Notepad does not report the file name back to me, so I cannot confirm it saved as plan.txt. Please check the file yourself.'); } },
+  { s:{calc:1,disp:'810',note:1,text:NOTE_TEXT,title:'plan.txt'}, run:function(){
+      AE.runDeclare('Close Calculator.','no Calculator window'); } },
+  { s:{calc:0,disp:'810',note:1,text:NOTE_TEXT,title:'plan.txt'}, run:function(){
+      AE.runResolve(AE.model.steps.length-1,'verified','No Calculator window is open'); } },
+  { s:{calc:0,note:1,text:NOTE_TEXT,title:'plan.txt'}, run:function(){
+      AE.runEnd('stopped','Finished, with one step I could not check',
+        'Five steps checked and correct. Saving the note could not be confirmed, so I am not calling this done.'); } }
+];
+
+/* ==================================================================
+   THE SHARED GROUND LINE
+   ------------------------------------------------------------------
+   The panel is bottom anchored inside the scene, but HOW FAR its own
+   bottom sits above the scene floor is the sum of the host padding,
+   the indicator button and the gap, and all three belong to the
+   spliced panel. They are not mine to assume, and guessing them is
+   what left the windows 12 then 20 pixels off the panel twice.
+
+   So: measure where the panel's bottom actually is, and hang the two
+   windows off that. Self correcting, and it stays correct if the
+   panel's own chrome ever changes.
+   ================================================================== */
+function alignDesktop(){
+  var sr = demoScene.getBoundingClientRect();
+  if (!sr.width) return;
+  var k = sr.width / T.SCENE_W;
+  var pr = document.querySelector('#demoScene .ae-panel').getBoundingClientRect();
+  if (pr.height < 10) return;                 /* the panel is not open yet */
+  var base = (pr.bottom - sr.top) / k;        /* the ground line, in scene px */
+  noteWin.style.top = Math.round(base - noteWin.offsetHeight) + 'px';
+  calcWin.style.top = Math.round(base - calcWin.offsetHeight * 0.72) + 'px';
+}
+
+function paintScene(s){
+  var st = { calc:0, note:0, disp:'0', text:'', title:'Untitled' };
+  for (var k in s) if (Object.prototype.hasOwnProperty.call(s,k)) st[k] = s[k];
+  calcWin.style.opacity = st.calc ? '1' : '0';
+  /* 0.72 keeps the real window from towering over the 400 wide panel */
+  calcWin.style.transform = st.calc ? 'scale(.72)' : 'scale(.71) translateY(16px)';
+  noteWin.style.opacity = st.note ? '1' : '0';
+  noteWin.style.transform = st.note ? 'none' : 'translateY(12px) scale(.985)';
+  if (calcDisplay) calcDisplay.textContent = st.disp;
+  noteText.textContent = st.text;
+  noteTitle.textContent = st.title + ' - Notepad';
+  noteTab.textContent = st.title;
+}
+
+var applied = -1;
+function applyBeat(target){
+  if (target === applied) return;
+  var rebuilding = target < applied;
+  if (rebuilding) document.body.classList.add('rebuilding');
+  var from = rebuilding ? 0 : applied + 1;
+  for (var i=from; i<=target; i++) BEATS[i].run();
+  applied = target;
+  paintScene(BEATS[target].s);
+  alignDesktop();
+  var cap = -1;
+  for (var j=target; j>=0; j--){ if (typeof BEATS[j].cap === 'number'){ cap = BEATS[j].cap; break; } }
+  paintCaption(cap);
+  if (rebuilding){
+    /* two frames: one to paint, one to let transitions back in */
+    requestAnimationFrame(function(){
+      requestAnimationFrame(function(){ document.body.classList.remove('rebuilding'); });
+    });
+  }
+}
+function driveDemo(p){
+  var d = T.DEMO_RUN;
+  var f = cl((p - d[0]) / (d[1] - d[0]), 0, 1);
+  applyBeat(Math.min(BEATS.length - 1, Math.floor(f * BEATS.length)));
+}
+
+/* The desktop is laid out once at 1440x800 and scaled to fit, so the
+   three windows can never overlap at any screen size. */
+function fitScene(){
+  /* The old version capped k at 1 and clamped the width at 1800. On a
+     2560 screen that left the desktop at 56% of the width and on a 3440
+     at 42%, which is why it looked fine in a window and tiny full
+     screen. It may now be drawn larger than its 1440 layout, and the
+     room the caption needs is MEASURED rather than guessed at 46px. */
+  var foot = demoFoot ? demoFoot.offsetHeight : 90;
+  var pad  = 2 * (parseFloat(getComputedStyle(demoBand).paddingTop) || 20);
+  var availW = SW - 48;
+  var availH = SH * T.SCENE_FIT - foot - pad;
+  if (availW < 40 || availH < 40) return;
+  demoScene.style.width  = T.SCENE_W + 'px';
+  demoScene.style.height = T.SCENE_H + 'px';
+  var k = cl(Math.min(availW / T.SCENE_W, availH / T.SCENE_H), 0.16, T.SCENE_MAX);
+  demoScene.style.transform = 'scale(' + k.toFixed(4) + ')';
+  demoScene.parentNode.style.height = (T.SCENE_H * k) + 'px';
+  demoScene.parentNode.style.width  = (T.SCENE_W * k) + 'px';
+}
+
+/* ==================================================================
+   LAYOUT
+   ================================================================== */
+var layoutTries = 0;
+function layout(){
+  SW = camStage.clientWidth;
+  SH = camStage.clientHeight;
+  /* A zero sized root has to be survived, not just skipped. If the page
+     loads into a container that has no size yet, an embedded frame or a
+     pane that has not been shown, bailing once left the world image
+     unsized, the page height unset and the desktop unscaled FOREVER,
+     because nothing ever asked again. Retry until there is a size.
+     setTimeout rather than rAF: rAF is paused while the tab is hidden,
+     which is exactly one of the cases this has to recover from. */
+  if (SW < 2 || SH < 2){
+    if (layoutTries++ < 100) setTimeout(layout, 100);
+    return;
+  }
+  layoutTries = 0;
+
+  narrow = SW < T.NARROW_AT;
+  spacer.style.height = (narrow ? T.PAGE_VH_NARROW : T.PAGE_VH) + 'vh';
+
+  IW = Math.max(SW, SH / (T.FRAME_FRACTION_MAX * ASPECT));
+  IH = IW * ASPECT;
+  FF = SH / IH;
+
+  world.style.width  = IW.toFixed(2) + 'px';
+  world.style.height = IH.toFixed(2) + 'px';
+  world.style.left   = ((SW - IW) / 2).toFixed(2) + 'px';
+
+  fitScene();
+  recomputeK();
+  lastWrite = '';
+}
+
+/* ==================================================================
+   THE CAMERA
+   ================================================================== */
+var LOCK = [false,false,false,false,false];
+function recomputeK(){
+  if(!LOCK[0]) T.K[0] = 0;
+  if(!LOCK[1]) T.K[1] = cl(T.HORIZON - FF, 0, 1-FF);
+  if(!LOCK[2]) T.K[2] = cl(T.HORIZON - T.K2_HORIZON_POS*FF, 0, 1-FF);
+  if(!LOCK[3]) T.K[3] = cl(1 - FF - T.FINAL_GAP, T.K[2], 1-FF);
+  if(!LOCK[4]) T.K[4] = 1 - FF;
+  syncNumbers();
+}
+
+function cameraAt(p){
+  var P=T.P, K=T.K, y, s=1, u;
+  if      (p < P[0]) { y = K[0]; }
+  else if (p < P[1]) { y = lerp(K[0],K[1], sm(seg(p,P[0],P[1]))); }
+  else if (p < P[2]) { y = K[1]; }
+  else if (p < P[3]) { y = lerp(K[1],K[2], sm(seg(p,P[2],P[3]))); }
+  else if (p < P[4]) { y = K[2]; }
+  else if (p < P[5]) { u = sm(seg(p,P[4],P[5]));
+                       y = lerp(K[2],K[3],u); s = lerp(1,T.SCALE_K3,u); }
+  else if (p < P[6]) { y = K[3]; s = T.SCALE_K3; }
+  else if (p < P[7]) { u = sm(seg(p,P[6],P[7]));
+                       y = lerp(K[3],K[4],u); s = lerp(T.SCALE_K3,T.SCALE_K4,u); }
+  else               { y = K[4]; s = T.SCALE_K4; }
+  return {y:y, s:s};
+}
+
+function horizonScreenY(camY,s){ return IH * (1 - s - camY + T.HORIZON*s); }
+
+/* ==================================================================
+   SCROLL IN, TRANSFORM OUT
+   ================================================================== */
+var rawP = 0, scrubP = null, curY = 0, curS = 1, lastWrite = '';
+
+function readScroll(){
+  var max = document.documentElement.scrollHeight - window.innerHeight;
+  rawP = max > 0 ? cl(window.pageYOffset / max, 0, 1) : 0;
+  if (scrubP !== null){ scrubP = null; }
+  onScrollHook(rawP);
+}
+window.addEventListener('scroll', readScroll, {passive:true});
+
+function writeWorld(){
+  var s = 'translate3d(0,' + (-curY*IH).toFixed(2) + 'px,0) scale(' + curS.toFixed(4) + ')';
+  if (s !== lastWrite){ world.style.transform = s; lastWrite = s; }
+}
+
+/* ==================================================================
+   OVERLAYS
+   ================================================================== */
+function fade(e,a,y){
+  e.style.opacity = a.toFixed(3);
+  if (y !== null) e.style.transform = 'translateY('+(y||0).toFixed(1)+'px)';
+  /* hidden, not just transparent, so nothing offscreen keeps animating */
+  e.style.visibility = a < 0.004 ? 'hidden' : 'visible';
+}
+
+function overlays(p){
+  var joinA = 0;
+  for (var i=0;i<LAYERS.length;i++){
+    var key=LAYERS[i][0], e=LAYERS[i][1];
+    var a=band(p,T[key]);
+    fade(e,a,(1-a)*(key==='HERO'?22:18));
+    if (key==='JOIN') joinA=a;
+  }
+  var demoA = band(p,T.DEMO);
+  fade(demoWrap,demoA,null);
+  scrim.style.opacity = band(p,T.HERO).toFixed(3);
+
+  /* the waitlist and the demo's own Yes/No are the only things that
+     ever take the pointer, and it is the BOX that takes it, not the
+     full screen layer, which would swallow clicks while invisible */
+  joinIn.style.pointerEvents = joinA>.5 ? 'auto' : 'none';
+  demoWrap.style.pointerEvents = demoA>.5 ? 'auto' : 'none';
+}
+
+/* ==================================================================
+   THE LENS, ALIVE
+   The cursor position is only STORED by the listener; the styles are
+   written in the one rAF loop, because there are two dozen elements
+   to move and reading their rects in a mousemove thrashes layout.
+   ================================================================== */
+var pupils=[], cores=[], eyeEls=[], mx=-1, my=-1, lastMx=-2, lastMy=-2;
+function initLens(){
+  pupils=[].slice.call(document.querySelectorAll('.ey .pupil'));
+  cores =[].slice.call(document.querySelectorAll('.ap .core'));
+  eyeEls=[].slice.call(document.querySelectorAll('.cell .ey .eye'));
+  if (reduce.matches) return;
+  (function blink(){
+    setTimeout(function(){
+      for(var i=0;i<eyeEls.length;i++) eyeEls[i].classList.add('blink');
+      setTimeout(function(){
+        for(var i=0;i<eyeEls.length;i++) eyeEls[i].classList.remove('blink');
+      }, 120);
+      blink();
+    }, 2600 + Math.random()*3400);
+  })();
+}
+function applyLensTracking(){
+  if (reduce.matches || mx < 0) return;
+  if (mx === lastMx && my === lastMy) return;
+  lastMx = mx; lastMy = my;
+  var i, r, cx, cy, a, d;
+  for (i=0;i<cores.length;i++){
+    r=cores[i].parentElement.getBoundingClientRect();
+    if (r.width === 0) continue;                 /* skin not on show */
+    cx=r.left+r.width/2; cy=r.top+r.height/2;
+    a=Math.atan2(my-cy,mx-cx);
+    /* divided by the lens's own on screen size, so the big
+       introduction lens and the little grid ones feel the same */
+    d=Math.min(T.LENS_TRACK, Math.hypot(mx-cx,my-cy)/(r.width*0.45));
+    cores[i].style.marginLeft=(Math.cos(a)*d).toFixed(2)+'px';
+    cores[i].style.marginTop =(Math.sin(a)*d).toFixed(2)+'px';
+  }
+  for (i=0;i<pupils.length;i++){
+    r=pupils[i].parentElement.getBoundingClientRect();
+    if (r.width === 0) continue;
+    cx=r.left+r.width/2; cy=r.top+r.height/2;
+    a=Math.atan2(my-cy,mx-cx);
+    d=Math.min(8,Math.hypot(mx-cx,my-cy)/16);
+    pupils[i].style.transform='translate(calc(-50% + '+(Math.cos(a)*d).toFixed(2)+'px), calc(-50% + '+(Math.sin(a)*d).toFixed(2)+'px))';
+  }
+}
+
+/* ==================================================================
+   THE WAITLIST.  Email required, phone optional.
+   ================================================================== */
+/* First touch attribution. Whatever campaign brought someone here is kept
+   for the whole session, so a reload or a wander through the page does not
+   quietly relabel them as direct traffic. Private mode can throw on
+   sessionStorage, and a dead analytics field must never break a signup. */
+var UTM_KEY='aether_utm', UTM_FIELDS=['utm_source','utm_medium','utm_campaign'];
+
+function initUTM(){
+  var q, fromUrl={}, found=false, i, v;
+  try { q=new URLSearchParams(location.search); } catch(e){ return; }
+  for(i=0;i<UTM_FIELDS.length;i++){
+    v=q.get(UTM_FIELDS[i]);
+    if(v){ fromUrl[UTM_FIELDS[i]]=String(v).slice(0,200); found=true; }
+  }
+  if(!found) return;
+  try {
+    if(!sessionStorage.getItem(UTM_KEY)) sessionStorage.setItem(UTM_KEY, JSON.stringify(fromUrl));
+  } catch(e){}
+}
+
+function readUTM(){
+  try { return JSON.parse(sessionStorage.getItem(UTM_KEY)||'{}') || {}; }
+  catch(e){ return {}; }
+}
+
+function wireForm(){
+  var f=document.getElementById('joinForm');
+  var err=document.getElementById('joinErr'), done=document.getElementById('joinDone');
+  f.addEventListener('submit', function(e){
+    e.preventDefault();
+    var email=f.email.value.trim(), phone=f.phone.value.trim();
+    var problem=f.problem ? f.problem.value.trim() : '';
+    err.hidden=true;
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){
+      err.textContent='That email does not look right.'; err.hidden=false; return;
+    }
+
+    /* Mirror the saved campaign into the hidden fields, so what is sent is
+       also what a browser or a future form encoder would see. */
+    var utm=readUTM(), j;
+    for(j=0;j<UTM_FIELDS.length;j++){
+      if(f[UTM_FIELDS[j]]) f[UTM_FIELDS[j]].value = utm[UTM_FIELDS[j]] || '';
+    }
+
+    var show=function(){
+      f.querySelector('button').hidden=true;
+      var fields=f.querySelectorAll('.field');
+      for(var i=0;i<fields.length;i++) fields[i].hidden=true;
+      var hints=f.querySelectorAll('.hint');
+      for(i=0;i<hints.length;i++) hints[i].hidden=true;
+      done.hidden=false;
+    };
+
+    /* A bot fills every field it can see, including the one nobody can.
+       Say nothing, do nothing: telling it it failed only teaches it. */
+    if (f.company && f.company.value){ show(); return; }
+
+    /* If the endpoint is not wired, SAY SO. The old build showed the
+       confirmation anyway, which meant a real person could hand over a
+       real email and watch it be thrown away. build-live.js now refuses
+       to build at all in this state, so this is only ever seen while
+       working locally. */
+    if (FORM_ENDPOINT.indexOf('REPLACE_ME') > -1){
+      err.textContent='The waitlist is not connected yet, so nothing was sent.';
+      err.hidden=false;
+      console.warn('FORM_ENDPOINT is still REPLACE_ME. Nothing was sent.', {email:email, phone:phone});
+      return;
+    }
+
+    /* This form does not post FormData, it builds the body by hand, so a
+       hidden input is not enough on its own. Anything not named here never
+       leaves the page. */
+    var payload = {
+      email:email, phone:phone, problem:problem,
+      utm_source:utm.utm_source||'', utm_medium:utm.utm_medium||'', utm_campaign:utm.utm_campaign||''
+    };
+
+    var opts = (FORM_MODE === 'sheet')
+      ? { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
+          body:JSON.stringify(payload) }
+      : { method:'POST', headers:{'Accept':'application/json','Content-Type':'application/json'},
+          body:JSON.stringify(payload) };
+
+    fetch(FORM_ENDPOINT, opts).then(function(r){
+      if(r.ok) show();
+      else { err.textContent='That did not send. Try again in a moment.'; err.hidden=false; }
+    }).catch(function(){
+      err.textContent='That did not send. Try again in a moment.'; err.hidden=false;
+    });
+  });
+}
+
+/* ==================================================================
+   THE ONE LOOP
+   ================================================================== */
+function stepOnce(){
+  var p = (scrubP !== null) ? scrubP : rawP;
+  var cam = cameraAt(p);
+  var k = reduce.matches ? 1 : T.FOLLOW;
+
+  curY += (cam.y - curY) * k;
+  curS += (cam.s - curS) * k;
+  var eps = T.SNAP_PX / Math.max(IH,1);
+  if (Math.abs(cam.y - curY) < eps)     curY = cam.y;
+  if (Math.abs(cam.s - curS) < 0.00002) curS = cam.s;
+
+  writeWorld();
+  overlays(p);
+  driveDemo(p);
+  applyLensTracking();
+  updateHud(p);
+}
+
+var raf = 0;
+function tick(){ stepOnce(); raf = requestAnimationFrame(tick); }
+
+var pending = 0;
+function nudge(){
+  if (pending) return;
+  pending = requestAnimationFrame(function(){ pending=0; stepOnce(); });
+}
+
+/* ==================================================================
+   THE IMAGE SWAP
+   ================================================================== */
+function upgradeImage(){
+  var full = new Image();
+  full.src = 'master-landscape.jpg';
+  var swap = function(){ world.src = full.src; fullLoaded = true; };
+  if (full.decode){ full.decode().then(swap).catch(function(){}); }
+  else { full.onload = swap; }
+}
+
+/* ==================================================================
+   INPUT
+   ================================================================== */
+window.addEventListener('mousemove', function(e){
+  mx=e.clientX; my=e.clientY; if(reduce.matches) nudge();
+}, {passive:true});
+window.addEventListener('resize', function(){ layout(); if(reduce.matches) nudge(); });
+if ('ResizeObserver' in window) new ResizeObserver(function(){ layout(); if(reduce.matches) nudge(); }).observe(document.documentElement);
+
+
+
+/* ==================================================================
+   GO
+   ================================================================== */
+buildLensGrid();
+buildCalculator();
+buildCaptions();
+layout();
+initLens();
+initUTM();
+wireForm();
+readScroll();
+curY = cameraAt(rawP).y;
+curS = cameraAt(rawP).s;
+writeWorld();
+overlays(rawP);
+driveDemo(rawP);
+upgradeImage();
+
+if (reduce.matches){ nudge(); }
+else { raf = requestAnimationFrame(tick); }
+
+document.addEventListener('visibilitychange', function(){
+  if (document.hidden){ if(raf){ cancelAnimationFrame(raf); raf=0; } }
+  else if (!reduce.matches && !raf){ raf = requestAnimationFrame(tick); }
+});
+reduce.addEventListener('change', function(){
+  if (reduce.matches){ if(raf){cancelAnimationFrame(raf); raf=0;} nudge(); }
+  else if (!raf){ raf = requestAnimationFrame(tick); }
+});
+
+})();
+</script>
+</body>
+</html>
