@@ -1418,7 +1418,12 @@ var T = {
   FINAL_GAP: 0.06,
 
   K: [0.0000, 0.3203, 0.4449, 0.7323, 0.7923],
-  P: [0.045, 0.16, 0.40, 0.46, 0.86, 0.90, 0.958, 0.974, 1.00],
+  /* P[0] is where the camera first moves. It used to be 0.045, which on a
+     1080 window is 923px of scrolling against a photograph that does not
+     move: the page reads as broken before it reads as slow. The K0 to K1
+     ramp now starts earlier and still ends at 0.16, so the reveal is
+     spread over MORE scroll than before, not less. */
+  P: [0.006, 0.16, 0.40, 0.46, 0.86, 0.90, 0.958, 0.974, 1.00],
 
   SCALE_K3: 1.18,
   SCALE_K4: 1.30,
@@ -1437,7 +1442,10 @@ var T = {
 
   DEMO_RUN: [0.562, 0.775],
 
-  HERO:  [0.00, 0.00, 0.030, 0.045],
+  /* Fades from the first scroll rather than holding at full for 616px,
+     and clears before the camera has gone far, so the two read as one
+     movement instead of the text waiting its turn. */
+  HERO:  [0.00, 0.00, 0.006, 0.022],
   LENS:  [0.17, 0.195, 0.260, 0.285],
   LOOKS: [0.26, 0.285, 0.355, 0.385],
   LEAD:  [0.465, 0.482, 0.518, 0.535],
@@ -1816,8 +1824,43 @@ function readScroll(){
   rawP = max > 0 ? cl(window.pageYOffset / max, 0, 1) : 0;
   if (scrubP !== null){ scrubP = null; }
   onScrollHook(rawP);
+  trackDepth(rawP);
 }
 window.addEventListener('scroll', readScroll, {passive:true});
+
+/* ==================================================================
+   MEASUREMENT
+   ------------------------------------------------------------------
+   Vercel's own script is already on the page but sends nothing beyond a
+   page view, so there is no way to tell a visitor who read the whole
+   thing from one who bounced off the first screen.
+
+   The plain HTML build takes va('event', {name, data}); track() is the
+   npm package's API and does not exist here. Every call is guarded and
+   swallowed: analytics is the least important thing on this page and
+   must never be the reason a signup fails.
+   ================================================================== */
+function sendEvent(name, data){
+  try {
+    if (typeof window.va !== 'function') return;
+    window.va('event', data ? { name:name, data:data } : { name:name });
+  } catch(e){}
+}
+
+/* Depth of the camera run, not of the document, because the document is
+   mostly a 1900vh spacer and its scrollTop says nothing about how much
+   of the story someone actually saw. Once each, per page view. */
+var DEPTH_MARKS = [25, 50, 75, 100], depthSent = {};
+function trackDepth(p){
+  var pct = cl(p, 0, 1) * 100, i, m;
+  for (i = 0; i < DEPTH_MARKS.length; i++){
+    m = DEPTH_MARKS[i];
+    if (!depthSent[m] && pct >= m){
+      depthSent[m] = true;
+      sendEvent('Scroll ' + m + '%');
+    }
+  }
+}
 
 function writeWorld(){
   var s = 'translate3d(0,' + (-curY*IH).toFixed(2) + 'px,0) scale(' + curS.toFixed(4) + ')';
@@ -2088,7 +2131,9 @@ function wireForm(){
           body:JSON.stringify(payload) };
 
     fetch(FORM_ENDPOINT, opts).then(function(r){
-      if(r.ok) show();
+      /* show() first: the confirmation is what the person is waiting for,
+         and it must not sit behind anything as optional as a counter. */
+      if(r.ok){ show(); sendEvent('Waitlist Signup'); }
       else { err.textContent='That did not send. Try again in a moment.'; err.hidden=false; }
     }).catch(function(){
       err.textContent='That did not send. Try again in a moment.'; err.hidden=false;
@@ -2184,6 +2229,53 @@ reduce.addEventListener('change', function(){
 })();
 </script>
 <script defer src="https://cdn.jsdelivr.net/npm/intl-tel-input@29.2.3/dist/js/intlTelInputWithUtils.min.js"></script>
+<!-- The queue that custom events land in. It has to exist BEFORE the
+     insights script, because the script is deferred and an event fired
+     in the meantime would otherwise be thrown away. The real va()
+     replaces this and drains window.vaq on load. -->
+<script>window.va = window.va || function(){ (window.vaq = window.vaq || []).push(arguments); };</script>
 <script defer src="/_vercel/insights/script.js"></script>
+
+<div id="scrollCue" aria-hidden="true">
+  <span class="sc-label">Scroll</span>
+  <span class="sc-chev">
+    <svg width="15" height="9" viewBox="0 0 15 9" fill="none"><path d="M1 1l6.5 6.5L14 1" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </span>
+</div>
+<style>
+#scrollCue{
+  position:fixed; left:50%; z-index:40;
+  bottom:calc(24px + env(safe-area-inset-bottom, 0px));
+  transform:translateX(-50%);
+  display:flex; flex-direction:column; align-items:center; gap:7px;
+  color:rgba(255,255,255,.86); pointer-events:none;
+  opacity:0; transition:opacity .4s ease;
+  animation:scDrift 1.9s ease-in-out infinite;
+}
+#scrollCue.sc-show{opacity:1}
+#scrollCue .sc-label{
+  font-family:var(--font); font-weight:650; font-size:11px;
+  letter-spacing:.2em; text-transform:uppercase;
+  text-shadow:0 2px 14px rgba(0,0,0,.75);
+}
+#scrollCue .sc-chev{ display:flex; filter:drop-shadow(0 2px 10px rgba(0,0,0,.6)) }
+@keyframes scDrift{ 0%,100%{transform:translateX(-50%) translateY(0)} 50%{transform:translateX(-50%) translateY(7px)} }
+@media (prefers-reduced-motion:reduce){ #scrollCue{ animation:none } }
+</style>
+<script>
+(function(){
+  var el = document.getElementById('scrollCue');
+  if(!el) return;
+  var done = false;
+  function sync(){
+    if (done) return;
+    if (window.scrollY > 60){ done = true; el.classList.remove('sc-show'); }
+    else { el.classList.add('sc-show'); }
+  }
+  window.addEventListener('scroll', sync, {passive:true});
+  window.addEventListener('load', sync);
+  sync();
+})();
+</script>
 </body>
 </html>
