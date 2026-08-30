@@ -443,9 +443,19 @@ body{
    ================================================================== */
 .ov{
   position:fixed; inset:0; z-index:3; pointer-events:none;
-  display:flex; align-items:center; justify-content:center;
-  padding:0 max(16px,3vw); opacity:0; will-change:opacity,transform;
+  display:flex; align-items:safe center; justify-content:center;
+  padding:max(20px,4vh) max(16px,3vw); opacity:0; will-change:opacity,transform;
+  /* a section taller than the window used to overflow equally past both
+     edges and, since scroll drives the camera not the content, the clipped
+     part was unreachable. now it scrolls inside itself and, via safe
+     centring, drops to top-aligned only once it no longer fits. auto means
+     it is scrollable ONLY while it overflows; overscroll-behavior stays at
+     the default so wheel and touch chain straight back to the page, and so
+     to the camera, the instant the overlay hits its own top or bottom. */
+  overflow-y:auto; -webkit-overflow-scrolling:touch;
+  scrollbar-width:none; -ms-overflow-style:none;
 }
+.ov::-webkit-scrollbar{ width:0; height:0; display:none }
 .ov .in{max-width:900px; width:100%; margin:0 auto; text-align:center}
 .ov .in.wide{max-width:min(1800px,96vw)}
 .ov .in.lift{transform:translateY(-7vh)}
