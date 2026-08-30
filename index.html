@@ -619,23 +619,38 @@ h2.big{ font-size:clamp(34px,5vw,88px); max-width:14ch; margin-bottom:28px; line
 /* ==================================================================
    THE DEMO: A REAL DESKTOP
    ------------------------------------------------------------------
-   Laid out once at 1440x600 and scaled to fit, so the three windows
+   Laid out once at 1440x700 and scaled to fit, so the three windows
    can never overlap at any screen size.
 
-   THE BASELINE.  All three sit on one line, y=526. Measured: the panel
-   is bottom anchored and its own bottom lands 74px above the scene
-   floor (18 padding + 44 indicator + 12 gap), so 600-74=526 is the line
-   everything else is hung from. A
-   shared ground line is what makes it read as settled rather than
-   scattered; the old layout had the two windows 20px apart at the top,
-   which is a near miss and reads as a mistake rather than a choice.
+   THREE INDEPENDENT THINGS.  The panel is docked to the scene's bottom
+   right corner and grows UPWARD out of it, so its bottom right corner
+   is the one point that never moves however much it is holding. The
+   two windows have fixed left and top and are never positioned against
+   it. Nothing measures anything: change the panel's contents and the
+   only pixels that change are the panel's own.
+
+   THE BASELINE.  All three still sit on one line, y=626, but it is now
+   arithmetic rather than a measurement. The panel is bottom anchored
+   and its own bottom lands 74px above the scene floor (18 padding + 44
+   indicator + 12 gap), so 700-74=626 is the line the two windows are
+   written to. A shared ground line is what makes it read as settled
+   rather than scattered; the old layout had the two windows 20px apart
+   at the top, which is a near miss and reads as a mistake rather than
+   a choice.
 
    THE RHYTHM.  Notepad 80..560, Calculator 640..942, panel 1022..1422.
    The three gaps are 80, 80 and 80. Nothing ever covers anything.
 
-   The box went from 800 tall to 600 by deleting the dead space above
-   the windows, which is what lets the whole thing sit lower and away
-   from the top of the browser.
+   THE HEADROOM.  700, not 600, because the panel's max-height is 600
+   and 626-600 = 26: it can reach its largest state and still clear the
+   top of the scene. That empty band above it is reserved on purpose.
+
+   All of the above is the WIDE scene. Below a 900 wide viewport the
+   scene switches to a second, stacked shape: see #demoScene.narrow
+   further down, and SCENE_WIDE / SCENE_NARROW in T. A single shape
+   cannot serve both, because the scene only ever scales uniformly: at
+   1440 wide a 390 wide phone lands at 0.24 and the panel's body text
+   renders near 3.6px.
    ================================================================== */
 #demoWrap{
   position:fixed; inset:0; z-index:6; pointer-events:none; opacity:0; overflow:hidden;
@@ -714,8 +729,10 @@ h2.big{ font-size:clamp(34px,5vw,88px); max-width:14ch; margin-bottom:28px; line
   transform-origin:top center;
 }
 
-/* The panel ships as a fixed corner overlay. Here it has to sit in the
-   bottom right of the SCENE instead, so it can never cover a window.
+/* The panel ships as a fixed corner overlay. Here it sits in the bottom
+   right of the SCENE instead, pinned by that corner and growing upward
+   into the headroom above it, so it can never cover a window and never
+   move one. One rule for both scene shapes.
    An id beats the panel's own [data-corner=br] rule without editing it. */
 #demoScene .ae-host{
   position:absolute; inset:auto 0 0 auto; z-index:6;
@@ -723,6 +740,43 @@ h2.big{ font-size:clamp(34px,5vw,88px); max-width:14ch; margin-bottom:28px; line
   flex-direction:column-reverse; align-items:flex-end; gap:12px;
 }
 #demoScene .ae-panel{ pointer-events:auto }
+
+/* ------------------------------------------------------------------
+   THE NARROW SCENE.  806x966, set by layout() below 900px viewport.
+   The row becomes a stack: the two windows share the top, the panel
+   is docked below Notepad, attached to it.
+
+   THE PANEL IS BOTTOM ANCHORED, exactly as in the wide scene. Its host
+   is pinned by its BOTTOM RIGHT corner: right:0 puts its right edge on
+   the scene's right edge, which is Notepad's right edge too, and
+   bottom:0 with 18 of padding puts the lens on the scene floor. So the
+   LENS never moves, and the panel's bottom edge never moves either;
+   the panel grows UPWARD out of that corner, its height whatever its
+   content needs. No fixed height, no empty space inside it.
+
+   SCENE_H IS A CONSTANT, sized off the tallest beat and then left
+   alone. Stepping every beat, the panel's content tops out at 452 (the
+   "Not verified" card with its reason):
+      18  bottom padding
+      44  the lens, which sits under the panel
+      12  gap
+     892  the panel's fixed BOTTOM
+     452  the TALLEST beat's panel, so its top reaches 440 at maximum
+     ---
+     966  = SCENE_H
+
+   440 is 20 below Notepad's 420 bottom, so at its largest the panel
+   sits just under Notepad. Shorter beats open a bigger gap between the
+   two, which is right: a docked panel sits on the desktop, it does not
+   stretch to fill it.
+
+   Calculator 0..302 visual (419 wide at 0.72), top level with Notepad
+   at 20; being taller it runs down to 506, past the panel's 440 top,
+   beside it on the left. Notepad 326..806, gutter 24 to the Calculator.
+   ------------------------------------------------------------------ */
+#demoScene.narrow .calc{ left:0;     top:20px }
+#demoScene.narrow .note{ left:326px; top:20px }
+#demoScene.narrow .ae-host{ inset:auto 0 0 auto; padding:0 0 18px 0 }
 
 /* --- shared window chrome, real Windows 11 --- */
 .win{
@@ -745,8 +799,10 @@ h2.big{ font-size:clamp(34px,5vw,88px); max-width:14ch; margin-bottom:28px; line
 /* --- Calculator. Real geometry, captured from this machine. ---
    The real window is 419x675, which towers over the 400 wide panel and
    unbalances the scene. Shown at 0.72, the way a smaller window sits on
-   a desktop: 302x486, at 580..882. */
-.calc{ left:640px; top:40px; width:419px; height:675px; transform-origin:top left }
+   a desktop: 302x486, at 640..942.
+   top 140 puts its 486 tall visual bottom on the 626 ground line. Fixed:
+   nothing measures it and nothing moves it. */
+.calc{ left:640px; top:140px; width:419px; height:675px; transform-origin:top left }
 .calc .body{ position:relative; height:calc(100% - 32px) }
 .c-el{
   position:absolute; display:flex; align-items:center; justify-content:center;
@@ -766,7 +822,8 @@ h2.big{ font-size:clamp(34px,5vw,88px); max-width:14ch; margin-bottom:28px; line
 
 /* --- Notepad. Real Windows 11 structure: tab strip, then File Edit
        View, then the text area. --- */
-.note{ left:80px; top:126px; width:480px; height:400px }
+/* top 226 puts its 400 tall bottom on the same 626 ground line. */
+.note{ left:80px; top:226px; width:480px; height:400px }
 .note .tabs{
   height:32px; display:flex; align-items:stretch; gap:2px; padding:0 8px;
   background:#202020; border-bottom:1px solid rgba(255,255,255,.06);
@@ -1441,8 +1498,24 @@ var T = {
   SNAP_PX: 0.02,
   LENS_SCALE: 3.6,
   LENS_TRACK: 9,
-  SCENE_W: 1440,
-  SCENE_H: 600,           /* 526 baseline + the panel's own 74px of chrome */           /* was 800: the dead space above the windows is gone */
+  /* TWO scene shapes, because the scene only ever scales UNIFORMLY.
+     One 1440x600 box cannot serve a 16:9 desktop and a 390 wide phone:
+     whichever shape suits one starves the other. So the wide desktop
+     keeps its original row, and narrow gets a stacked box of its own.
+     layout() copies the right pair into SCENE_W / SCENE_H, so every
+     reader below still asks for exactly one number.
+
+     WIDE carries the panel's full 600px max-height as headroom above
+     its docked corner. NARROW instead anchors the panel by its TOP,
+     directly under Notepad, and lets it grow downward to whatever its
+     content needs. Both numbers are sized off the TALLEST beat once,
+     by hand, and then frozen: nothing here is ever derived from what
+     the panel happens to be holding at the time. */
+  SCENE_WIDE:   [1440, 700],   /* 626 ground line + 74 chrome; panel at max spans y 26..626 */
+  SCENE_NARROW: [806, 966],    /* 440 panel top + 452 tallest + 12 + 44 lens + 18; W = Notepad right edge */
+  SCENE_AT: 900,               /* below this viewport width, use the stacked box */
+  SCENE_W: 1440,          /* the ACTIVE pair. written by layout(), never read from here */
+  SCENE_H: 600,
   SCENE_FIT: 0.92,        /* how much of the frame height the demo may use */
   SCENE_MAX: 2.4,         /* the desktop may be drawn LARGER than its layout size */
 
@@ -1504,7 +1577,7 @@ var LAYERS = [
 ];
 var joinIn = document.querySelector('#ovJoin .in');
 
-var SW=0, SH=0, IW=0, IH=0, FF=0.2077, narrow=false;
+var SW=0, SH=0, IW=0, IH=0, FF=0.2077, narrow=false, sceneNarrow=false;
 
 /* ==================================================================
    THE CALCULATOR
@@ -1673,28 +1746,24 @@ var BEATS = [
 ];
 
 /* ==================================================================
-   THE SHARED GROUND LINE
+   THE GROUND LINE IS A CONSTANT, NOT A MEASUREMENT
    ------------------------------------------------------------------
-   The panel is bottom anchored inside the scene, but HOW FAR its own
-   bottom sits above the scene floor is the sum of the host padding,
-   the indicator button and the gap, and all three belong to the
-   spliced panel. They are not mine to assume, and guessing them is
-   what left the windows 12 then 20 pixels off the panel twice.
+   There used to be an alignDesktop() here that measured the panel's
+   bottom every beat and hung the two windows off it. It is gone.
+   Measuring the panel made the windows a function of the panel, so any
+   panel that changed size dragged them with it.
 
-   So: measure where the panel's bottom actually is, and hang the two
-   windows off that. Self correcting, and it stays correct if the
-   panel's own chrome ever changes.
+   Now all three are independent. The panel is docked to the scene's
+   bottom right corner and grows upward out of it; the windows have
+   fixed left and top in scene coordinates, written once in CSS, and
+   nothing in the script ever touches their position. The shared ground
+   line still exists, it is just arithmetic done once here rather than
+   a measurement repeated 13 times:
+
+     panel bottom = SCENE_H - 74      (18 host padding + 44 lens + 12 gap)
+     WIDE   700 - 74 = 626 -> .note top 226 (626-400)
+                              .calc top 140 (626-486, the 0.72 height)
    ================================================================== */
-function alignDesktop(){
-  var sr = demoScene.getBoundingClientRect();
-  if (!sr.width) return;
-  var k = sr.width / T.SCENE_W;
-  var pr = document.querySelector('#demoScene .ae-panel').getBoundingClientRect();
-  if (pr.height < 10) return;                 /* the panel is not open yet */
-  var base = (pr.bottom - sr.top) / k;        /* the ground line, in scene px */
-  noteWin.style.top = Math.round(base - noteWin.offsetHeight) + 'px';
-  calcWin.style.top = Math.round(base - calcWin.offsetHeight * 0.72) + 'px';
-}
 
 function paintScene(s){
   var st = { calc:0, note:0, disp:'0', text:'', title:'Untitled' };
@@ -1719,7 +1788,6 @@ function applyBeat(target){
   for (var i=from; i<=target; i++) BEATS[i].run();
   applied = target;
   paintScene(BEATS[target].s);
-  alignDesktop();
   var cap = -1;
   for (var j=target; j>=0; j--){ if (typeof BEATS[j].cap === 'number'){ cap = BEATS[j].cap; break; } }
   paintCaption(cap);
@@ -1779,6 +1847,14 @@ function layout(){
 
   narrow = SW < T.NARROW_AT;
   spacer.style.height = (narrow ? T.PAGE_VH_NARROW : T.PAGE_VH) + 'vh';
+
+  /* Which scene shape. A separate threshold from NARROW_AT, which is
+     about page LENGTH, not about what fits beside what. */
+  sceneNarrow = SW < T.SCENE_AT;
+  var pair = sceneNarrow ? T.SCENE_NARROW : T.SCENE_WIDE;
+  T.SCENE_W = pair[0];
+  T.SCENE_H = pair[1];
+  demoScene.classList.toggle('narrow', sceneNarrow);
 
   IW = Math.max(SW, SH / (T.FRAME_FRACTION_MAX * ASPECT));
   IH = IW * ASPECT;
