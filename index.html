@@ -272,6 +272,10 @@
 .ae-input::placeholder{ color:rgba(255,255,255,.34) }
 .ae-input:focus{ border-color:rgba(var(--accent),.45); background:rgba(255,255,255,.065);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.06), 0 0 22px -8px rgba(var(--accent),.8) }
+/* #typeIn is part of the picture only: wired to nothing, so it must not
+   take the pointer or focus (it also carries readonly / tabindex -1 /
+   aria-hidden in the markup). */
+#typeIn{ pointer-events:none }
 .ae-egs{ display:flex; flex-direction:column; gap:9px }
 .ae-egs div{ font-size:13px; font-weight:600; letter-spacing:.018em; line-height:19px;
   color:rgba(255,255,255,.40) }
@@ -482,9 +486,12 @@ body{
 }
 html:not(.rail-h) .ov .in.wide,
 html:not(.rail-h) .demoband{ padding-right:var(--rail-gutter-r) }
-/* the demo caption is a sibling of .demoband, so the padding above does
-   not reach it; a transform shifts it (and its ::before pool) whole. */
-html:not(.rail-h) #demoFoot{ transform:translateX(calc(-1 * var(--rail-gutter-r))) }
+/* The demo caption block (#demoFoot: kick line, the two explanation
+   lines, the step line, the big caption) is deliberately NOT shifted.
+   It stays centred on the full viewport via .demoinner's align-items,
+   independent of the scene's gutter. Those lines are short and never
+   reach the rail, so they need no clearance and must read as centred on
+   the page, not on the gutter-reduced box. */
 html.rail-h .ov .in.wide{
   padding-bottom:calc(var(--rail-gutter-b) + env(safe-area-inset-bottom, 0px)) }
 html.rail-h #demoWrap{
@@ -535,6 +542,13 @@ h2.big{ font-size:clamp(34px,5vw,88px); max-width:14ch; margin-bottom:28px; line
 .keys{
   margin:clamp(14px,2vh,22px) auto 0; font-size:clamp(13px,1.1vw,16px);
   color:rgba(255,255,255,.72); text-shadow:0 2px 18px rgba(0,0,0,.8);
+}
+/* The line under "Three looks, seven states." — content, not a .kick
+   label, so normal weight and colour, sat above the grid. */
+.looksintro{
+  margin:0 auto clamp(18px,2.6vw,32px); max-width:52ch;
+  font-size:clamp(14px,1.15vw,17px); line-height:1.55; font-weight:450;
+  color:rgba(255,255,255,.82); text-shadow:0 2px 18px rgba(0,0,0,.7);
 }
 .keys .k{
   display:inline-block; padding:3px 10px; margin:0 3px; border-radius:8px;
@@ -640,6 +654,21 @@ h2.big{ font-size:clamp(34px,5vw,88px); max-width:14ch; margin-bottom:28px; line
    never fewer. */
 @media (max-width:420px){ .cell{ --ind-w:.58 } }
 
+/* FIX 4: below 560 the cells wrap to four columns, so every look is two
+   card rows and the grid nearly doubles in height. With the new
+   explanation paragraph on top, the third look now runs under the
+   horizontal rail. Tighten only the vertical rhythm here - group gaps,
+   row-name gaps, card padding, indicator hold. The paragraph text is
+   left alone, and nothing above 560 (all wide screens included). */
+@media (max-width:560px){
+  #ovLooks .looksintro{ margin-bottom:clamp(7px,1.6vw,11px) }
+  #ovLooks .grid{ margin-top:clamp(8px,1.4vh,13px) }
+  #ovLooks .grow{ margin-bottom:clamp(5px,1vh,8px) }
+  #ovLooks .grow .rowname{ margin-bottom:clamp(2px,.6vh,4px) }
+  #ovLooks .cell{ padding:clamp(6px,1vh,13px) 4px clamp(5px,.8vh,10px) }
+  #ovLooks .cell .hold{ height:calc(58px * min(var(--ind-h),var(--ind-w))) }
+}
+
 /* Belt and braces after the width fix above: even if some future change
    makes the grid too wide again, it can no longer paint outside this
    section and over whatever is behind it. Horizontal only, because the
@@ -701,6 +730,16 @@ h2.big{ font-size:clamp(34px,5vw,88px); max-width:14ch; margin-bottom:28px; line
 .demofoot > *{ position:relative }
 /* the label steps back so the line it introduces can step forward */
 .demokick{ margin:0 0 clamp(8px,1.1vh,15px); color:rgba(255,255,255,.5) }
+/* the demo intro line: content, not a .kick label, so normal body size
+   and colour (brief item 5). Centred on the same axis as the caption. */
+.demolead{ margin:0 auto clamp(6px,.9vh,12px); font-weight:600; text-align:center;
+  font-size:clamp(13px,1.2vw,17px); line-height:1.4; color:rgba(255,255,255,.92);
+  text-shadow:0 2px 14px rgba(0,0,0,.8) }
+/* the disclaimer: sits directly under the panel, readable at mobile
+   scale (it is outside the scaled scene). Centred like the caption. */
+.demonote{ margin:0 auto clamp(10px,1.5vh,18px); max-width:56ch; text-align:center;
+  font-size:clamp(12px,1vw,14px); line-height:1.5; color:rgba(255,255,255,.62);
+  text-shadow:0 2px 12px rgba(0,0,0,.75) }
 /* the step counter: content, not a label, so it stays legible where
    .kick would be dimmed away. Phase 4 sets the wording. */
 .demostep{ margin:0 0 clamp(8px,1.1vh,15px); font-weight:650;
@@ -1024,8 +1063,9 @@ body.rebuilding *::after{ transition:none !important; animation:none !important 
 </div></div>
 
 <!-- 1b. THE INTRO LINE.  Fills the pan between the hero and the lens.
-         Copy lands in phase 4; band is INTRO in T. -->
+         Tells people what they are early to. Band is INTRO in T. -->
 <div class="ov" id="ovIntro"><div class="in">
+  <p class="leadline">Not built yet. Join the waitlist and I will tell you when it is ready.</p>
 </div></div>
 
 <!-- 2.  THE LENS, INTRODUCED.  Hotkey and lens in one. At rest.
@@ -1047,6 +1087,7 @@ body.rebuilding *::after{ transition:none !important; animation:none !important 
 <div class="ov" id="ovLooks"><div class="in wide">
   <p class="kick">The lens</p>
   <h2>Three looks, seven states.</h2>
+  <p class="looksintro">The lens sits on your screen and tells you what Aether is doing right now. Pick the look you like. All three say the same seven things.</p>
   <div class="grid" id="lensGrid"></div>
 </div></div>
 
@@ -1110,7 +1151,8 @@ body.rebuilding *::after{ transition:none !important; animation:none !important 
       <div class="ae-rest-top">
         <div class="ae-hot">Hold <span class="ae-key">Ctrl</span> <span class="ae-plus">+</span>
           <span class="ae-key">Space</span> and say what you want.</div>
-        <input class="ae-input" id="typeIn" type="text" placeholder="Or type it here">
+        <input class="ae-input" id="typeIn" type="text" placeholder="Or type it here"
+               readonly tabindex="-1" aria-hidden="true">
       </div>
       <div class="ae-egs">
         <div>open Notepad and write today's plan</div>
@@ -1134,7 +1176,7 @@ body.rebuilding *::after{ transition:none !important; animation:none !important 
 
     <div class="ae-foot" id="foot" data-problem="0">
       <div class="rule"></div>
-      <div class="line"><span class="d"></span><span class="t" id="footText">Microphone and hotkey are working.</span></div>
+      <div class="line"><span class="d"></span><span class="t" id="footText">Can use your microphone and hotkeys.</span></div>
     </div>
 
   </div>
@@ -1145,7 +1187,8 @@ body.rebuilding *::after{ transition:none !important; animation:none !important 
     </div>
     </div>
     <div class="demofoot" id="demoFoot">
-      <p class="kick demokick">A real run, driven by your scroll</p>
+      <p class="demolead">One real task, start to finish. Scroll to watch it run.</p>
+      <p class="demonote">This is Aether doing a real task. We are still building it, so this is what it will look like when it is done.</p>
       <p class="demostep" id="demoStep" aria-live="polite"></p>
       <div class="democaps" id="demoCaps"></div>
     </div>
@@ -1199,14 +1242,14 @@ body.rebuilding *::after{ transition:none !important; animation:none !important 
       <span class="lbl">What are you hoping Aether solves for you? <span class="opt">optional</span></span>
       <textarea name="problem" rows="2" placeholder="Whatever's on your mind"></textarea>
     </label>
-    <p class="hint">We'll personally reach out about it, on X, email, or whatever you left above.</p>
+    <p class="hint">I will email you when it is ready.</p>
     <input type="hidden" name="utm_source">
     <input type="hidden" name="utm_medium">
     <input type="hidden" name="utm_campaign">
     <input type="text" name="company" class="nope" tabindex="-1" autocomplete="off" aria-hidden="true">
     <button type="submit">Join the waitlist</button>
     <p class="err" id="joinErr" hidden></p>
-    <p class="done" id="joinDone" hidden>You are on the list. I will email you when it is ready, and nothing else.</p>
+    <p class="done" id="joinDone" hidden>You are on the list. I will email you when it is ready.</p>
   </form>
   <p class="foot">
     <a href="mailto:navmeetbhullarsaab@gmail.com">navmeetbhullarsaab@gmail.com</a>
@@ -1647,7 +1690,7 @@ const AE = (function(){
   function setProblem(text){
     m.problem = text || null;
     $('foot').dataset.problem = text ? '1':'0';
-    $('footText').textContent = text || 'Microphone and hotkey are working.';
+    $('footText').textContent = text || 'Can use your microphone and hotkeys.';
     if(text) setIndicatorState('problem');
     else if(B.dataset.s==='problem') setIndicatorState('ready');
   }
@@ -2087,11 +2130,21 @@ function paintScene(s){
   noteTab.textContent = st.title;
 }
 
-/* Total steps for the counter: the highest cap in BEATS, + 1.
-   Derived, never hardcoded, so adding a captioned beat moves it. */
-var CAP_TOTAL = BEATS.reduce(function(m,b){
-  return (typeof b.cap === 'number' && b.cap + 1 > m) ? b.cap + 1 : m;
+/* The step counter reads from the SAME model the panel renders "STEP X"
+   from, so the two can never disagree: the current number is
+   AE.model.cursor, the total is the count of beats that push a step
+   (runDeclare / runAsk). NOT the cap field - that caps visible
+   captions, not steps, and tops out below the real step count. */
+var STEP_TOTAL = BEATS.reduce(function(n,b){
+  return n + (/\.runDeclare\(|\.runAsk\(/.test(b.run.toString()) ? 1 : 0);
 }, 0);
+function stepLine(){
+  var mdl = AE.model;
+  if (!mdl || !mdl.steps || !mdl.steps.length) return '';
+  var x = mdl.ended ? STEP_TOTAL
+                    : Math.min(STEP_TOTAL, Math.max(mdl.cursor, 0) + 1);
+  return 'Step ' + x + ' of ' + STEP_TOTAL;
+}
 
 var applied = -1;
 function applyBeat(target){
@@ -2105,10 +2158,7 @@ function applyBeat(target){
   var cap = -1;
   for (var j=target; j>=0; j--){ if (typeof BEATS[j].cap === 'number'){ cap = BEATS[j].cap; break; } }
   paintCaption(cap);
-  /* current step rides the same cap; before the first captioned
-     beat it reads as step 1. Wording is provisional (phase 4). */
-  if (demoStep) demoStep.textContent =
-    'Step ' + (Math.max(cap, 0) + 1) + ' of ' + CAP_TOTAL;
+  if (demoStep) demoStep.textContent = stepLine();
   if (rebuilding){
     /* two frames: one to paint, one to let transitions back in */
     requestAnimationFrame(function(){
