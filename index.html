@@ -459,6 +459,36 @@ body{
 .ov .in{max-width:900px; width:100%; margin:0 auto; text-align:center}
 .ov .in.wide{max-width:min(1800px,96vw)}
 .ov .in.lift{transform:translateY(-7vh)}
+/* ROOT FIX A: ONE conditional gutter, applied to the CONTENT WRAPPER,
+   never to .ov itself. .ov stays full-bleed edge to edge, so the scrim
+   and every background layer it carries are untouched. Only .in.wide
+   (the two full-width sections + the join form) and the demo scene are
+   ever wide enough to reach the rail; the narrow centred .in sections
+   are not, and do not move.
+
+   --rail-gutter-r is the overlap of a centred .in.wide with the rail's
+   widest label ("JOIN THE WAITLIST"), floored at 0 by max(): it is
+   0 on screens wide enough that there was never a collision (~2070px+),
+   so nothing shifts there. @property lets fitScene() read the resolved
+   px value, so the demo scene gets the identical clearance from one
+   source. The .demoband glass (::before, inset:0 -60px) is positioned
+   off the padding box, which padding-right does not move, so it still
+   runs off both edges: no strip. */
+@property --rail-gutter-r{ syntax:"<length>"; inherits:true; initial-value:0px }
+@property --rail-gutter-b{ syntax:"<length>"; inherits:true; initial-value:0px }
+:root{
+  --rail-gutter-r: max(0px, calc(min(1800px, 96vw) / 2 - 50vw + 134px));
+  --rail-gutter-b: 110px;
+}
+html:not(.rail-h) .ov .in.wide,
+html:not(.rail-h) .demoband{ padding-right:var(--rail-gutter-r) }
+/* the demo caption is a sibling of .demoband, so the padding above does
+   not reach it; a transform shifts it (and its ::before pool) whole. */
+html:not(.rail-h) #demoFoot{ transform:translateX(calc(-1 * var(--rail-gutter-r))) }
+html.rail-h .ov .in.wide{
+  padding-bottom:calc(var(--rail-gutter-b) + env(safe-area-inset-bottom, 0px)) }
+html.rail-h #demoWrap{
+  padding-bottom:calc(var(--rail-gutter-b) + env(safe-area-inset-bottom, 0px)) }
 
 .wm{
   font-size:clamp(66px,15vw,260px); font-weight:650; letter-spacing:-.048em;
@@ -671,6 +701,11 @@ h2.big{ font-size:clamp(34px,5vw,88px); max-width:14ch; margin-bottom:28px; line
 .demofoot > *{ position:relative }
 /* the label steps back so the line it introduces can step forward */
 .demokick{ margin:0 0 clamp(8px,1.1vh,15px); color:rgba(255,255,255,.5) }
+/* the step counter: content, not a label, so it stays legible where
+   .kick would be dimmed away. Phase 4 sets the wording. */
+.demostep{ margin:0 0 clamp(8px,1.1vh,15px); font-weight:650;
+  font-size:clamp(12px,1.05vw,14px); letter-spacing:.01em;
+  color:rgba(255,255,255,.66); text-shadow:0 2px 12px rgba(0,0,0,.7) }
 /* Every caption is drawn stacked and cross faded, so one never blinks
    out before the next arrives. Each line is lifted word for word from
    the brief and lands on the beat that proves it. */
@@ -988,6 +1023,11 @@ body.rebuilding *::after{ transition:none !important; animation:none !important 
   <p class="sub">A voice controlled desktop assistant for Windows.</p>
 </div></div>
 
+<!-- 1b. THE INTRO LINE.  Fills the pan between the hero and the lens.
+         Copy lands in phase 4; band is INTRO in T. -->
+<div class="ov" id="ovIntro"><div class="in">
+</div></div>
+
 <!-- 2.  THE LENS, INTRODUCED.  Hotkey and lens in one. At rest.
         No callouts. Its dot follows the pointer. On a camera hold. -->
 <div class="ov" id="ovLens"><div class="in">
@@ -1106,6 +1146,7 @@ body.rebuilding *::after{ transition:none !important; animation:none !important 
     </div>
     <div class="demofoot" id="demoFoot">
       <p class="kick demokick">A real run, driven by your scroll</p>
+      <p class="demostep" id="demoStep" aria-live="polite"></p>
       <div class="democaps" id="demoCaps"></div>
     </div>
   </div>
@@ -1175,6 +1216,268 @@ body.rebuilding *::after{ transition:none !important; animation:none !important 
 </div></div>
 
 <div id="spacer"></div>
+
+<!-- ================= THE RAIL  (rail-prototype.html) =================
+     Markup, CSS and behaviour are the prototype's, unchanged. The only
+     difference: this site has no DOM sections to scrollIntoView, so each
+     item carries data-band and a click sets scroll to that band's [1]
+     value in T, where it is fully visible. The aperture selectors are
+     scoped under .rail so the demo panel's [data-s=...] state rules
+     cannot reach the resting marker, and --ind-scale is pinned so it
+     does not inherit :root's. -->
+<style id="rail-css">
+/* ===== THE RAIL  (rail-prototype.html, adapted) =====
+   TWO layouts. WIDE (>=760px): vertical, docked to the right edge; the
+   active label sits BELOW its marker, one word per line, centred on the
+   marker's centre. NARROW (<760px): a HORIZONTAL rail along the bottom
+   of the viewport; the label sits ABOVE the active marker on one line.
+   Either way the rail is a fixed overlay that captures nothing: only the
+   markers take the pointer, so wheel and touch scroll straight through
+   and the page height and camera are untouched. */
+
+.rail{
+  --mark:26px; --ease-soft:cubic-bezier(.22,1,.36,1);
+  position:fixed; z-index:50; display:flex; gap:66px;
+  pointer-events:none;                       /* #8/#10: the rail is inert */
+  /* 66, not last round's 44: the active label is now up to three lines
+     (one word each), so the vertical markers need more air between them
+     for its pill to sit below one without touching the next. */
+}
+.rail .mark{ pointer-events:auto; cursor:pointer; touch-action:manipulation }
+.rail .tag{ pointer-events:none }
+
+/* -- WIDE: vertical, right edge. right:50 (not the prototype 26) leaves
+   room for the word-per-line pill to stay centred on a marker without
+   grazing the scrollbar on the narrower wide screens. -- */
+.rail{ right:50px; top:50%; transform:translateY(-50%);
+  flex-direction:column; align-items:flex-end }
+
+/* the track: a hairline through the markers' centre axis; gold fills it.
+   railMeasure/railPaint write --trackA (start), --trackLen and --fill in
+   whichever axis is live. */
+.rail::before,.rail::after{ content:""; position:absolute; z-index:0;
+  width:1px; right:calc(var(--mark) / 2 - .5px) }
+.rail::before{ top:var(--trackA,0px); height:var(--trackLen,0px);
+  background:rgba(255,255,255,.12) }
+.rail::after{ top:var(--trackA,0px); height:var(--fill,0px);
+  background:rgba(var(--accent),.6);
+  transition:height .5s var(--ease-soft), width .5s var(--ease-soft) }
+
+.rail .item{ display:flex; align-items:center; gap:12px;
+  background:none; border:0; padding:0; font:inherit; color:inherit;
+  position:relative; z-index:1 }
+
+.rail .mark{ width:var(--mark); height:var(--mark); flex:none;
+  position:relative; display:grid; place-items:center }
+
+/* #9 the hover preview, wide only: the name to the LEFT of the marker,
+   fading in only while pointed at, gone the moment the pointer leaves. */
+.rail .label{ font-size:12.5px; color:rgba(255,255,255,.6); white-space:nowrap;
+  opacity:0; transform:translateX(6px); pointer-events:none;
+  transition:opacity .28s var(--ease-soft),transform .28s var(--ease-soft) }
+.rail .item:hover .label{ opacity:1; transform:none }
+
+/* #1/#3 the active label. Word per line (each in its own block span),
+   the block centred on the marker's exact centre, in the same dark
+   translucent pill the narrow layout uses. */
+.rail .tag{
+  position:absolute; white-space:nowrap; text-align:center;
+  font-size:10px; font-weight:650; letter-spacing:.15em; text-transform:uppercase;
+  color:rgba(255,255,255,.92);
+  background:rgba(10,11,13,.72);
+  -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px);
+  border-radius:11px; padding:5px 9px;
+  opacity:0; transition:opacity .3s var(--ease-soft) }
+.rail .tag .w{ display:block; line-height:1.28 }
+.rail .item.on .tag, .rail .waitlist .tag{ opacity:1 }
+/* WIDE placement: below the marker, centred on its centre line */
+.rail .tag{ left:50%; top:100%; transform:translateX(-50%); margin-top:9px }
+
+/* #4 the waitlist invitation at the very top of the page: to the LEFT of
+   the lens, ~21px, medium, gold, no pill. Reads as an invitation, but
+   sits well under the "Aether" wordmark, which stays the biggest thing.
+   As soon as you scroll (JS drops .at-top) it slides down and shrinks
+   into the active-label pill. */
+.rail .waitlist .tag{
+  transition:opacity .3s var(--ease-soft),
+             transform .5s var(--ease-soft),
+             font-size .5s var(--ease-soft),
+             letter-spacing .5s var(--ease-soft),
+             padding .5s var(--ease-soft),
+             background .5s var(--ease-soft),
+             color .4s var(--ease-soft) }
+.rail.at-top .waitlist .tag{
+  left:auto; right:calc(100% + 34px); top:50%;
+  transform:translateY(-50%); margin-top:0;
+  font-size:21px; font-weight:500; letter-spacing:.004em; text-transform:none;
+  color:rgba(var(--accent),.95);
+  background:transparent; -webkit-backdrop-filter:none; backdrop-filter:none;
+  padding:0; border-radius:0 }
+.rail.at-top .waitlist .tag .w{ display:inline }
+
+/* NEW: the label itself is a click target, same jump as the lens */
+.rail .waitlist .tag{ pointer-events:auto; cursor:pointer }
+
+/* NEW: the start-page cue - two gold chevrons drifting toward the lens
+   and fading, slow loop. Only while the waitlist label is the full
+   invitation. WIDE: sits in the gap between the invitation (left) and
+   the lens, pointing right. */
+.rail .cue{ position:absolute; pointer-events:none; opacity:0; z-index:2;
+  transition:opacity .45s var(--ease-soft) }
+.rail.at-top .waitlist .cue{ opacity:1 }
+.rail.at-top .waitlist .cue{ right:calc(100% + 8px); top:50%;
+  margin-top:-3px; width:20px; height:6px }
+.rail .cue i{ position:absolute; left:0; top:0; display:block; width:5px; height:5px;
+  border-top:1.5px solid rgba(var(--accent),.85);
+  border-right:1.5px solid rgba(var(--accent),.85);
+  transform:rotate(45deg) }
+.rail .cue i:nth-child(1){ animation:cue-x 2.6s var(--ease-soft) infinite }
+.rail .cue i:nth-child(2){ animation:cue-x 2.6s var(--ease-soft) .6s infinite }
+@keyframes cue-x{ 0%{opacity:0;left:0} 28%{opacity:.7} 62%,100%{opacity:0;left:11px} }
+@keyframes cue-y{ 0%{opacity:0;top:0} 28%{opacity:.7} 62%,100%{opacity:0;top:11px} }
+
+.rail .dot{ width:9px; height:9px; border-radius:50%;
+  background:rgba(255,255,255,.22);
+  transition:background .3s,transform .3s,box-shadow .3s }
+.rail .item:hover .dot{ background:rgba(255,255,255,.45) }
+.rail .item.on .dot{ background:rgba(var(--accent),.95); transform:scale(1.25);
+  box-shadow:0 0 0 4px rgba(var(--accent),.14) }
+
+/* the real Aether aperture, lifted from the site */
+.rail .indicator{ position:absolute; left:50%; top:50%; --ind-scale:.448;
+  transform:translate(-50%,-50%) scale(var(--ind-scale));
+  display:inline-flex; align-items:center; justify-content:center }
+.rail .ap{ width:58px; height:58px; border-radius:50%; position:relative;
+  background:radial-gradient(circle at 50% 42%,#0a0d12 0%,#141922 66%,#1e242f 100%);
+  box-shadow:inset 0 2px 9px rgba(0,0,0,.9), inset 0 -1px 0 rgba(255,255,255,.05),
+    0 0 0 1px rgba(255,255,255,.09), 0 12px 30px rgba(0,0,0,.55);
+  display:flex; align-items:center; justify-content:center; overflow:hidden }
+.rail .ap .blades{ position:absolute; inset:5px; border-radius:50%; opacity:.55; animation:none;
+  background:conic-gradient(from 0deg,
+    transparent 0 11%, rgba(255,255,255,.055) 11% 12.2%, transparent 12.2% 27.6%,
+    rgba(255,255,255,.055) 27.6% 28.8%, transparent 28.8% 44.3%,
+    rgba(255,255,255,.055) 44.3% 45.5%, transparent 45.5% 61%,
+    rgba(255,255,255,.055) 61% 62.2%, transparent 62.2% 77.6%,
+    rgba(255,255,255,.055) 77.6% 78.8%, transparent 78.8% 94.3%,
+    rgba(255,255,255,.055) 94.3% 95.5%, transparent 95.5%) }
+.rail .ap .iris{ width:28px; height:28px; border-radius:50%;
+  border:6px solid rgba(255,255,255,.34); opacity:.7; animation:none;
+  transition:all .55s var(--ease-soft) }
+.rail .ap .core{ position:absolute; width:8px; height:8px; border-radius:50%;
+  background:rgba(255,255,255,.12); animation:none; transition:all .45s ease }
+
+/* Resting, not listening. The gold grows and settles rather than staying lit. */
+.rail .waitlist .ap .iris{ border-color:rgba(var(--accent),.5); opacity:.85;
+  animation:rest-iris 4.6s ease-in-out infinite }
+.rail .waitlist .ap .core{ background:rgba(var(--accent),.75);
+  animation:rest-core 4.6s ease-in-out infinite }
+@keyframes rest-iris{
+  0%,100%{box-shadow:0 0 6px rgba(var(--accent),.12), inset 0 0 4px rgba(var(--accent),.08)}
+  50%    {box-shadow:0 0 20px rgba(var(--accent),.38), inset 0 0 12px rgba(var(--accent),.22)}
+}
+@keyframes rest-core{
+  0%,100%{box-shadow:0 0 4px rgba(var(--accent),.3)}
+  50%    {box-shadow:0 0 12px rgba(var(--accent),.85)}
+}
+.rail .item.on .ap .iris{ border-color:rgba(var(--accent),.8); opacity:1 }
+.rail .waitlist .label{ display:none }   /* the .tag names it instead */
+
+/* ===== NARROW: horizontal rail along the bottom. Keyed to .rail-h on
+   <html>, which layout() sets at SCENE_AT, NOT a media query. ===== */
+html.rail-h .rail{
+  right:auto; top:auto;
+  left:50%; bottom:calc(14px + env(safe-area-inset-bottom, 0px));
+  transform:translateX(-50%);
+  flex-direction:row; align-items:center;
+  gap:clamp(40px, 15.5vw, 72px);
+  --mark:24px;
+}
+html.rail-h .rail .indicator{ --ind-scale:.414 }
+
+/* horizontal track: hairline through the markers' centre, gold fills L->R */
+html.rail-h .rail::before,html.rail-h .rail::after{ width:auto; right:auto; height:1px;
+  top:calc(var(--mark) / 2 - .5px) }
+html.rail-h .rail::before{ left:var(--trackA,0px); width:var(--trackLen,0px) }
+html.rail-h .rail::after{ left:var(--trackA,0px); width:var(--fill,0px) }
+
+html.rail-h .rail .label{ display:none }   /* #9: no hover on this layout */
+
+/* FIX 2: on the horizontal rail EXACTLY ONE label is ever shown, and it
+   is fixed-centred above the whole row of markers, not tied to a
+   marker. At the top of the page that one label is the waitlist
+   invitation; everywhere else it is the current section's label and the
+   waitlist label is hidden. Never both (visibility, not opacity, and no
+   transition, so there is no crossfade frame where two show). */
+html.rail-h .rail .tag{
+  position:fixed; left:50%; right:auto; top:auto;
+  bottom:calc(50px + env(safe-area-inset-bottom, 0px));
+  transform:translateX(-50%); margin:0;
+  font-size:9.5px; letter-spacing:.12em;
+  opacity:0; visibility:hidden; transition:none }
+html.rail-h .rail .tag .w{ display:inline }
+html.rail-h .rail:not(.at-top) .item.on .tag{ opacity:1; visibility:visible }
+html.rail-h .rail.at-top .waitlist .tag{
+  opacity:1; visibility:visible;
+  /* override the WIDE at-top rule (.rail.at-top .waitlist .tag, which
+     outweighs the base html.rail-h .rail .tag on class count): this
+     label is fixed-centred above the row like every other narrow tag. */
+  left:50%; right:auto; top:auto;
+  transform:translateX(-50%);
+  bottom:calc(54px + env(safe-area-inset-bottom, 0px));
+  font-size:clamp(14px, 4.6vw, 19px); font-weight:600;
+  letter-spacing:.012em; text-transform:none;
+  color:rgba(var(--accent),.98);
+  background:rgba(10,11,13,.78);
+  -webkit-backdrop-filter:blur(9px); backdrop-filter:blur(9px);
+  padding:6px 13px; border-radius:99px;
+  box-shadow:0 4px 24px -6px rgba(var(--accent),.35) }
+html.rail-h .rail.at-top .waitlist .tag .w{ display:inline }
+
+/* the chevron cue rides with the (fixed, centred) invitation, pointing
+   down toward the row */
+html.rail-h .rail.at-top .waitlist .cue{
+  position:fixed; right:auto; left:50%; margin-left:-9px; top:auto;
+  bottom:calc(40px + env(safe-area-inset-bottom, 0px)); width:18px; height:14px }
+html.rail-h .rail .cue i{ transform:rotate(135deg) }
+html.rail-h .rail .cue i:nth-child(1){ animation:cue-y 2.6s var(--ease-soft) infinite }
+html.rail-h .rail .cue i:nth-child(2){ animation:cue-y 2.6s var(--ease-soft) .6s infinite }
+
+@media (prefers-reduced-motion:reduce){
+  .rail .waitlist .ap .iris,.rail .waitlist .ap .core{ animation:none }
+  .rail::after{ transition:none }
+  .rail .waitlist .tag{ transition:opacity .3s }
+  .rail .cue i{ animation:none }
+}
+</style>
+
+<nav class="rail" id="rail" aria-label="Sections">
+  <button class="item" data-band="LENS" aria-label="Aether">
+    <span class="label">Aether</span>
+    <span class="mark"><span class="dot"></span><span class="tag"><span class="w">Aether</span></span></span>
+  </button>
+  <button class="item" data-band="DEMO" aria-label="Demo">
+    <span class="label">Demo</span>
+    <span class="mark"><span class="dot"></span><span class="tag"><span class="w">Demo</span></span></span>
+  </button>
+  <button class="item" data-band="DOES" aria-label="Where it stands">
+    <span class="label">Where it stands</span>
+    <span class="mark"><span class="dot"></span><span class="tag"><span class="w">Where</span>
+      <span class="w">it</span>
+      <span class="w">stands</span></span></span>
+  </button>
+  <button class="item waitlist" data-band="JOIN" aria-label="Join the waitlist">
+    <span class="label">Join the waitlist</span>
+    <span class="mark">
+      <span class="indicator"><span class="ap">
+        <span class="blades"></span><span class="iris"></span><span class="core"></span>
+      </span></span>
+      <span class="tag"><span class="w">Join</span>
+        <span class="w">the</span>
+        <span class="w">waitlist</span></span>
+      <span class="cue" aria-hidden="true"><i></i><i></i></span>
+    </span>
+  </button>
+</nav>
 
 
 
@@ -1523,19 +1826,22 @@ var T = {
   PAGE_VH_NARROW: 1000,
   NARROW_AT: 760,
 
-  DEMO_RUN: [0.562, 0.775],
+  DEMO_RUN: [0.480, 0.838],
 
-  /* Fades from the first scroll rather than holding at full for 616px,
-     and clears before the camera has gone far, so the two read as one
-     movement instead of the text waiting its turn. */
-  HERO:  [0.00, 0.00, 0.006, 0.022],
-  LENS:  [0.17, 0.195, 0.260, 0.285],
-  LOOKS: [0.26, 0.285, 0.355, 0.385],
-  LEAD:  [0.465, 0.482, 0.518, 0.535],
-  DEMO:  [0.545, 0.562, 0.775, 0.792],
-  CLAIM: [0.802, 0.816, 0.845, 0.858],
-  DOES:  [0.903, 0.918, 0.948, 0.958],
-  JOIN:  [0.976, 0.985, 1.010, 1.020]
+  /* HERO still fades from the first scroll. The dead pan that used to
+     follow it (HERO out 0.022 -> LENS in 0.17) is gone: INTRO fills
+     0.045..0.118 of it and the rest of the reclaimed range across the
+     page goes to DEMO, which grows from 0.213 to 0.358 of the scroll.
+     Each band is [in-start, in-end, out-start, out-end] in scroll p. */
+  HERO:  [0.000, 0.000, 0.006, 0.022],
+  INTRO: [0.045, 0.062, 0.100, 0.118],
+  LENS:  [0.140, 0.163, 0.225, 0.250],
+  LOOKS: [0.230, 0.253, 0.320, 0.348],
+  LEAD:  [0.388, 0.404, 0.438, 0.454],
+  DEMO:  [0.464, 0.480, 0.838, 0.855],
+  CLAIM: [0.865, 0.878, 0.905, 0.918],
+  DOES:  [0.933, 0.946, 0.974, 0.982],
+  JOIN:  [0.988, 0.995, 1.010, 1.020]
 };
 var DEFAULTS = JSON.parse(JSON.stringify(T));
 
@@ -1564,10 +1870,12 @@ var camStage=document.getElementById('camStage'), world=document.getElementById(
     demoBand=document.querySelector('.demoband'), demoFoot=document.getElementById('demoFoot'),
     calcWin=document.getElementById('calcWin'), noteWin=document.getElementById('noteWin'),
     noteText=document.getElementById('noteText'), noteTitle=document.getElementById('noteTitle'),
-    noteTab=document.getElementById('noteTab');
+    noteTab=document.getElementById('noteTab'),
+    demoStep=document.getElementById('demoStep');
 
 var LAYERS = [
   ['HERO',  document.getElementById('ovHero')],
+  ['INTRO', document.getElementById('ovIntro')],
   ['LENS',  document.getElementById('ovLens')],
   ['LOOKS', document.getElementById('ovLooks')],
   ['LEAD',  document.getElementById('ovLead')],
@@ -1779,6 +2087,12 @@ function paintScene(s){
   noteTab.textContent = st.title;
 }
 
+/* Total steps for the counter: the highest cap in BEATS, + 1.
+   Derived, never hardcoded, so adding a captioned beat moves it. */
+var CAP_TOTAL = BEATS.reduce(function(m,b){
+  return (typeof b.cap === 'number' && b.cap + 1 > m) ? b.cap + 1 : m;
+}, 0);
+
 var applied = -1;
 function applyBeat(target){
   if (target === applied) return;
@@ -1791,6 +2105,10 @@ function applyBeat(target){
   var cap = -1;
   for (var j=target; j>=0; j--){ if (typeof BEATS[j].cap === 'number'){ cap = BEATS[j].cap; break; } }
   paintCaption(cap);
+  /* current step rides the same cap; before the first captioned
+     beat it reads as step 1. Wording is provisional (phase 4). */
+  if (demoStep) demoStep.textContent =
+    'Step ' + (Math.max(cap, 0) + 1) + ' of ' + CAP_TOTAL;
   if (rebuilding){
     /* two frames: one to paint, one to let transitions back in */
     requestAnimationFrame(function(){
@@ -1816,6 +2134,15 @@ function fitScene(){
   var pad  = 2 * (parseFloat(getComputedStyle(demoBand).paddingTop) || 20);
   var availW = SW - 48;
   var availH = SH * T.SCENE_FIT - foot - pad;
+  /* the same clearance the .in.wide / demoband gutter uses, read from
+     the resolved custom property so there is one source. Falls back to
+     the formula if @property is unsupported. */
+  var gcs = getComputedStyle(document.documentElement);
+  var gr = parseFloat(gcs.getPropertyValue('--rail-gutter-r'));
+  var gb = parseFloat(gcs.getPropertyValue('--rail-gutter-b'));
+  if (isNaN(gr)) gr = Math.max(0, Math.min(1800, 0.96 * SW) / 2 - 0.5 * SW + 134);
+  if (isNaN(gb)) gb = 110;
+  if (sceneNarrow) availH -= gb; else availW -= gr;
   if (availW < 40 || availH < 40) return;
   demoScene.style.width  = T.SCENE_W + 'px';
   demoScene.style.height = T.SCENE_H + 'px';
@@ -1855,6 +2182,9 @@ function layout(){
   T.SCENE_W = pair[0];
   T.SCENE_H = pair[1];
   demoScene.classList.toggle('narrow', sceneNarrow);
+  /* ROOT FIX B: the rail flips to horizontal on the SAME threshold, so
+     there is no width where the scene is stacked but the rail is not. */
+  document.documentElement.classList.toggle('rail-h', sceneNarrow);
 
   IW = Math.max(SW, SH / (T.FRAME_FRACTION_MAX * ASPECT));
   IH = IW * ASPECT;
@@ -2274,8 +2604,78 @@ function upgradeImage(){
 window.addEventListener('mousemove', function(e){
   mx=e.clientX; my=e.clientY; if(reduce.matches) nudge();
 }, {passive:true});
-window.addEventListener('resize', function(){ layout(); if(reduce.matches) nudge(); });
-if ('ResizeObserver' in window) new ResizeObserver(function(){ layout(); if(reduce.matches) nudge(); }).observe(document.documentElement);
+window.addEventListener('resize', function(){ layout(); railMeasure(); if(reduce.matches) nudge(); });
+if ('ResizeObserver' in window) new ResizeObserver(function(){ layout(); railMeasure(); if(reduce.matches) nudge(); }).observe(document.documentElement);
+
+/* ==================================================================
+   THE RAIL   (markup + CSS: rail-prototype.html, unchanged)
+   ------------------------------------------------------------------
+   The prototype scrolled to DOM sections. This site has none, so each
+   item names a band in T and a real click sets scroll to that band's
+   [1] value, where it is fully visible (FIX 1). The active dot and the
+   gold fill come off rawP, the same scroll progress the camera reads,
+   through the onScrollHook that readScroll already calls: no second
+   scroll listener. The camera only
+   ever moves here on a click, never on hover or focus.
+   ================================================================== */
+var railEl = document.getElementById('rail');
+var railItems = railEl ? [].slice.call(railEl.querySelectorAll('.item')) : [];
+var railMarks = railItems.map(function(it){ return it.querySelector('.mark'); });
+var railStops = railItems.map(function(it){ return T[it.dataset.band][0]; });
+/* FIX 1: a click lands on index [1], where the section is fully
+   visible, not on [0] where it is still fading in from nothing. The
+   active dot still turns on at [0], as the section starts to appear. */
+var railTargets = railItems.map(function(it){ return T[it.dataset.band][1]; });
+var railTick = false;
+/* WIDE is a vertical rail, NARROW a horizontal one along the bottom.
+   Which one is live is the .rail-h class that layout() sets from
+   sceneNarrow: exactly the demo scene's own breakpoint, no media query
+   of its own to drift. */
+var railHoriz = false;
+
+function railScrollMax(){
+  return document.documentElement.scrollHeight - window.innerHeight;
+}
+function railCentre(m){
+  var r = railEl.getBoundingClientRect(), b = m.getBoundingClientRect();
+  return { x:(b.left - r.left) + b.width / 2, y:(b.top - r.top) + b.height / 2 };
+}
+function railMeasure(){
+  if (!railEl || !railMarks.length) return;
+  railHoriz = document.documentElement.classList.contains('rail-h');
+  var a = railCentre(railMarks[0]);
+  var z = railCentre(railMarks[railMarks.length - 1]);
+  railEl.style.setProperty('--trackA',   (railHoriz ? a.x : a.y) + 'px');
+  railEl.style.setProperty('--trackLen', (railHoriz ? z.x - a.x : z.y - a.y) + 'px');
+}
+function railPaint(){
+  railTick = false;
+  if (!railEl || !railMarks.length) return;
+  var cur = 0, i;
+  for (i = 0; i < railStops.length; i++){ if (rawP >= railStops[i]) cur = i; }
+  for (i = 0; i < railItems.length; i++){ railItems[i].classList.toggle('on', i === cur); }
+  var a = railCentre(railMarks[0]);
+  var c = railCentre(railMarks[cur]);
+  railEl.style.setProperty('--fill', (railHoriz ? c.x - a.x : c.y - a.y) + 'px');
+  /* the waitlist label reads as a full invitation only at the very top;
+     past here it becomes the compact active-label treatment. */
+  railEl.classList.toggle('at-top', rawP < 0.04);
+}
+function initRail(){
+  if (!railEl) return;
+  railItems.forEach(function(it, i){
+    it.addEventListener('click', function(){
+      window.scrollTo({ top: Math.ceil(railTargets[i] * railScrollMax()),
+                        behavior: reduce.matches ? 'auto' : 'smooth' });
+    });
+  });
+  /* reuse readScroll's existing hook; no second scroll listener */
+  onScrollHook = function(){
+    if (!railTick){ railTick = true; requestAnimationFrame(railPaint); }
+  };
+  railMeasure();
+  railPaint();
+}
 
 
 
@@ -2289,6 +2689,7 @@ layout();
 initLens();
 initUTM();
 wireForm();
+initRail();
 /* The picker's script is deferred, so it has run by the time this fires.
    If it never arrives, initPhone quietly leaves the plain input alone. */
 document.addEventListener('DOMContentLoaded', initPhone);
@@ -2347,6 +2748,9 @@ reduce.addEventListener('change', function(){
 #scrollCue .sc-chev{ display:flex; filter:drop-shadow(0 2px 10px rgba(0,0,0,.6)) }
 @keyframes scDrift{ 0%,100%{transform:translateX(-50%) translateY(0)} 50%{transform:translateX(-50%) translateY(7px)} }
 @media (prefers-reduced-motion:reduce){ #scrollCue{ animation:none } }
+/* narrow: the rail lives along the bottom, so lift the scroll cue clear
+   of it (both only show at the very top). Same .rail-h key. */
+html.rail-h #scrollCue{ bottom:calc(124px + env(safe-area-inset-bottom, 0px)) }
 </style>
 <script>
 (function(){
