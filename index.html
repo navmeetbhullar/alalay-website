@@ -11,6 +11,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300..800&display=swap" rel="stylesheet">
+<!-- The name is always set in the logo's own face: Fraunces Soft Italic,
+     SOFT 100, WONK 1, optical size 72, weight 600 (brand/alalay-mark.html).
+     text=Alalay subsets it to the four letters the name uses. -->
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@1,72,600,100,1&text=Alalay&display=swap" rel="stylesheet">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@29.2.3/dist/css/intlTelInput.css">
 <!--
@@ -500,6 +504,19 @@ html.rail-h .ov .in.wide{
 html.rail-h #demoWrap{
   padding-bottom:calc(var(--rail-gutter-b) + env(safe-area-inset-bottom, 0px)) }
 
+/* THE NAME. Wherever "Alalay" appears it is set in the logo's face, never
+   respaced or restyled by its surroundings: no uppercase, no tracking. */
+.brand{
+  font-family:'Fraunces',Georgia,serif; font-style:italic; font-weight:600;
+  letter-spacing:0; text-transform:none; font-kerning:normal; font-synthesis:none;
+}
+/* the y's tail drops well below the line; give it room above the subline */
+.wm .brand{ display:inline-block; padding:0 .06em .16em }
+/* the rail's labels are 10px caps; the name reads at the same weight a
+   size up, since an italic lowercase word is smaller than caps */
+.rail .tag .brand{ font-size:1.3em; line-height:1 }
+/* same reason inside the form's small caps labels */
+.field .lbl .brand{ font-size:1.3em; line-height:1 }
 .wm{
   font-size:clamp(66px,15vw,260px); font-weight:650; letter-spacing:-.048em;
   line-height:.9; margin:0; text-shadow:0 8px 60px rgba(0,0,0,.55);
@@ -1061,7 +1078,7 @@ body.rebuilding *::after{ transition:none !important; animation:none !important 
 
 <!-- 1.  HERO, on the still sky -->
 <div class="ov" id="ovHero"><div class="in lift">
-  <h1 class="wm">Alalay</h1>
+  <h1 class="wm"><span class="brand">Alalay</span></h1>
   <p class="sub">A voice controlled desktop assistant for Windows.</p>
 </div></div>
 
@@ -1090,7 +1107,7 @@ body.rebuilding *::after{ transition:none !important; animation:none !important 
 <div class="ov" id="ovLooks"><div class="in wide">
   <p class="kick">The lens</p>
   <h2>Three looks, seven states.</h2>
-  <p class="looksintro">The lens sits on your screen and tells you what Alalay is doing right now. Pick the look you like. All three say the same seven things.</p>
+  <p class="looksintro">The lens sits on your screen and tells you what <span class="brand">Alalay</span> is doing right now. Pick the look you like. All three say the same seven things.</p>
   <div class="grid" id="lensGrid"></div>
 </div></div>
 
@@ -1191,7 +1208,7 @@ body.rebuilding *::after{ transition:none !important; animation:none !important 
     </div>
     <div class="demofoot" id="demoFoot">
       <p class="demolead">One real task, start to finish. Scroll to watch it run.</p>
-      <p class="demonote">This is Alalay doing a real task. We are still building it, so this is what it will look like when it is done.</p>
+      <p class="demonote">This is <span class="brand">Alalay</span> doing a real task. We are still building it, so this is what it will look like when it is done.</p>
       <p class="demostep" id="demoStep" aria-live="polite"></p>
       <div class="democaps" id="demoCaps"></div>
     </div>
@@ -1202,7 +1219,7 @@ body.rebuilding *::after{ transition:none !important; animation:none !important 
 <div class="ov" id="ovClaim"><div class="in">
   <p class="kick">What makes it different</p>
   <h2 class="claim-a">Every other assistant clicks a button and tells you it worked.</h2>
-  <h2 class="claim-b">Alalay reads the screen back and shows you what it actually found.</h2>
+  <h2 class="claim-b"><span class="brand">Alalay</span> reads the screen back and shows you what it actually found.</h2>
 </div></div>
 
 <!-- 6.  WHERE IT STANDS, on the K3 hold -->
@@ -1242,7 +1259,7 @@ body.rebuilding *::after{ transition:none !important; animation:none !important 
       <input type="tel" id="joinPhone" name="phone" autocomplete="tel" placeholder="Leave blank if you prefer">
     </label>
     <label class="field">
-      <span class="lbl">What are you hoping Alalay solves for you? <span class="opt">optional</span></span>
+      <span class="lbl">What are you hoping <span class="brand">Alalay</span> solves for you? <span class="opt">optional</span></span>
       <textarea name="problem" rows="2" placeholder="Whatever's on your mind"></textarea>
     </label>
     <p class="hint">I will email you when it is ready.</p>
@@ -1498,8 +1515,8 @@ html.rail-h .rail .cue i:nth-child(2){ animation:cue-y 2.6s var(--ease-soft) .6s
 
 <nav class="rail" id="rail" aria-label="Sections">
   <button class="item" data-band="LENS" aria-label="Alalay">
-    <span class="label">Alalay</span>
-    <span class="mark"><span class="dot"></span><span class="tag"><span class="w">Alalay</span></span></span>
+    <span class="label"><span class="brand">Alalay</span></span>
+    <span class="mark"><span class="dot"></span><span class="tag"><span class="w brand">Alalay</span></span></span>
   </button>
   <button class="item" data-band="DEMO" aria-label="Demo">
     <span class="label">Demo</span>
