@@ -1,0 +1,268 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>Alalay mark</title>
+<link rel="icon" href="favicon.ico"><style>
+*{box-sizing:border-box}
+body{margin:0;background:#0B0E13;color:#E6EAF2;font:15px/1.6 Inter,-apple-system,'Segoe UI',system-ui,sans-serif;
+letter-spacing:.012em;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1000px;margin:0 auto;padding:64px 28px 96px}
+h1{font-size:30px;font-weight:650;margin:0 0 6px}
+h2{font-size:12px;font-weight:650;letter-spacing:.15em;text-transform:uppercase;color:#7C8798;
+margin:56px 0 18px;padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,.08)}
+p{color:#AEB7C6;max-width:62ch} .lead{margin:0 0 40px}
+code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;color:#8CC8FF}
+.sv svg{width:100%;height:auto;display:block}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
+.card{border:1px solid rgba(255,255,255,.09);border-radius:14px;overflow:hidden;background:#10141B}
+.stage{display:flex;align-items:center;justify-content:center;padding:28px;min-height:216px}
+.stage.dark{background:#0A0D12} .stage.light{background:#F4F6F9}
+.stage.blue{background:#1E7FE0} .stage.pale{background:#DBE5F0}
+.meta{padding:13px 15px;border-top:1px solid rgba(255,255,255,.07)}
+.meta b{display:block;font-weight:650;font-size:13.5px} .meta span{font-size:12.5px;color:#7C8798}
+.swatch{display:flex;gap:16px;flex-wrap:wrap}
+.chip{border-radius:14px;padding:22px;min-width:206px;border:1px solid rgba(255,255,255,.09)}
+.chip .hex{font:650 22px/1.2 Inter,system-ui} .chip .nm{font-size:12px;letter-spacing:.13em;
+text-transform:uppercase;opacity:.7;margin-bottom:14px}
+.chip .sub{font-size:12.5px;opacity:.75;margin-top:6px;font-family:ui-monospace,monospace}
+pre{background:#0A0D12;border:1px solid rgba(255,255,255,.09);border-radius:12px;padding:18px 20px;
+overflow-x:auto;font:13px/1.75 ui-monospace,Menlo,Consolas,monospace;color:#C6D0E0}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:11px 12px;border-bottom:1px solid rgba(255,255,255,.07)}
+th{font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;color:#7C8798;font-weight:650}
+ul{color:#AEB7C6;max-width:62ch;padding-left:20px} li{margin:7px 0}
+.warn{border-left:3px solid #3DA5FF;background:rgba(61,165,255,.07);padding:16px 20px;
+border-radius:0 12px 12px 0;margin:20px 0} .warn b{color:#8CC8FF}
+.lock{background:#0A0D12;border:1px solid rgba(255,255,255,.09);border-radius:14px;padding:44px}
+.build{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:20px}
+.build div{border:1px solid rgba(255,255,255,.09);border-radius:12px;padding:15px 17px;background:#10141B}
+.build b{display:block;font-size:13px;font-weight:650;color:#8CC8FF;margin-bottom:5px}
+.build span{font-size:13px;color:#AEB7C6;line-height:1.55}
+</style></head><body><div class="wrap">
+
+<h1>Alalay mark</h1>
+<p class="lead">The lens at rest. Proportions measured off the live component, not redrawn.</p>
+
+<h2>The colour</h2>
+<div class="swatch">
+  <div class="chip" style="background:#3DA5FF;color:#04121F">
+    <div class="nm">Alalay blue</div><div class="hex">#3DA5FF</div>
+    <div class="sub">rgb(61, 165, 255) &middot; hue 207</div></div>
+  <div class="chip" style="background:#0A0D12">
+    <div class="nm">Lens body</div><div class="hex">#080C13 &rarr; #1E2633</div>
+    <div class="sub">radial, 50% 41%, opaque</div></div>
+  <div class="chip" style="background:#11202F">
+    <div class="nm">Glass tint</div><div class="hex">50&ndash;62% alpha</div>
+    <div class="sub">density 1.25</div></div>
+</div>
+<p style="margin-top:18px">Hue 207 sits clear of Microsoft blue (205 at low value), Alexa cyan (190), and the
+blue-violet Siri and Gemini both use. High in value so it still holds at 16px, where a deep blue turns to mud.</p>
+
+<h2>How it is built</h2>
+<div class="build">
+  <div><b>The body is solid</b><span>An opaque dark disc. It is the object, not a window.</span></div>
+  <div><b>The ring and dot are glass</b><span>Tinted transparent, set into the body with a shadow just outside and just inside them.</span></div>
+  <div><b>The blades run underneath</b><span>They pass below the glass ring and stay visible through it. That is what proves the ring is transparent rather than painted on, and they end on the inner circle.</span></div>
+  <div><b>Depth is at the edge</b><span>A rim hairline catching light top-left and again weaker bottom-right, a dark line inside it for glass thickness, and a contact shadow. No bevel in the field.</span></div>
+</div>
+
+<h2>Variants</h2>
+<div class="grid">
+<div class="card"><div class="stage dark"><div class="sv" style="width:190px"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Alalay"><title>Alalay</title><defs>
+  <radialGradient id="ae-body-aetherlogo" cx="50%" cy="41%" r="80%">
+    <stop offset="0%" stop-color="#080C13"/><stop offset="62%" stop-color="#0E141D"/>
+    <stop offset="100%" stop-color="#1E2633"/></radialGradient>
+  <linearGradient id="ae-rim-aetherlogo" x1="0.14" y1="0.02" x2="0.86" y2="0.98">
+    <stop offset="0%" stop-color="#E9F3FF" stop-opacity=".92"/>
+    <stop offset="18%" stop-color="#AFC8E2" stop-opacity=".48"/>
+    <stop offset="42%" stop-color="#7F97B2" stop-opacity=".12"/>
+    <stop offset="62%" stop-color="#7F97B2" stop-opacity=".14"/>
+    <stop offset="84%" stop-color="#A7C1DC" stop-opacity=".42"/>
+    <stop offset="100%" stop-color="#DEEDFF" stop-opacity=".74"/></linearGradient>
+  <linearGradient id="ae-inner-aetherlogo" x1="0.12" y1="0" x2="0.88" y2="1">
+    <stop offset="0%" stop-color="#000000" stop-opacity=".62"/>
+    <stop offset="46%" stop-color="#000000" stop-opacity=".10"/>
+    <stop offset="100%" stop-color="#B9D4EE" stop-opacity=".09"/></linearGradient>
+  <linearGradient id="ae-glass-aetherlogo" x1="0.3" y1="0.02" x2="0.7" y2="0.98">
+    <stop offset="0%" stop-color="#9BD4FF" stop-opacity="0.775"/>
+    <stop offset="34%" stop-color="#3DA5FF" stop-opacity="0.625"/>
+    <stop offset="72%" stop-color="#1F79D2" stop-opacity="0.500"/>
+    <stop offset="100%" stop-color="#63B8FF" stop-opacity="0.600"/></linearGradient>
+  <linearGradient id="ae-lip-aetherlogo" x1="0.3" y1="0" x2="0.7" y2="1">
+    <stop offset="0%" stop-color="#F4FBFF" stop-opacity=".88"/>
+    <stop offset="40%" stop-color="#BFE4FF" stop-opacity=".16"/>
+    <stop offset="66%" stop-color="#FFFFFF" stop-opacity="0"/>
+    <stop offset="100%" stop-color="#A6DAFF" stop-opacity=".40"/></linearGradient>
+  <linearGradient id="ae-lip2-aetherlogo" x1="0.7" y1="1" x2="0.3" y2="0">
+    <stop offset="0%" stop-color="#EAF7FF" stop-opacity=".50"/>
+    <stop offset="55%" stop-color="#FFFFFF" stop-opacity="0"/></linearGradient>
+  <radialGradient id="ae-sheen-aetherlogo" cx="50%" cy="50%" r="50%">
+    <stop offset="0%" stop-color="#E4F0FF" stop-opacity=".13"/>
+    <stop offset="100%" stop-color="#E4F0FF" stop-opacity="0"/></radialGradient>
+  <filter id="ae-b3-aetherlogo" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="3"/></filter>
+  <filter id="ae-b7-aetherlogo" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="7"/></filter>
+  <filter id="ae-b18-aetherlogo" x="-90%" y="-90%" width="280%" height="280%"><feGaussianBlur stdDeviation="18"/></filter>
+  <filter id="ae-drop-aetherlogo" x="-50%" y="-50%" width="200%" height="200%">
+    <feDropShadow dx="0" dy="9" stdDeviation="13" flood-color="#00060F" flood-opacity=".50"/></filter></defs><circle cx="256.0" cy="256.0" r="216.0" fill="url(#ae-body-aetherlogo)" filter="url(#ae-drop-aetherlogo)"/><g clip-path="url(#ae-clipL-aetherlogo)"><ellipse cx="219.0" cy="132.0" rx="179" ry="83" fill="url(#ae-sheen-aetherlogo)" transform="rotate(-14 219.0 132.0)"/><g stroke="#000000" stroke-opacity=".38" stroke-width="4.1" transform="translate(0,2.2)"><g transform="rotate(30 256.0 256.0)"><line x1="256.0" y1="196.4" x2="256.0" y2="76.7"/></g><g transform="rotate(90 256.0 256.0)"><line x1="256.0" y1="196.4" x2="256.0" y2="76.7"/></g><g transform="rotate(150 256.0 256.0)"><line x1="256.0" y1="196.4" x2="256.0" y2="76.7"/></g><g transform="rotate(210 256.0 256.0)"><line x1="256.0" y1="196.4" x2="256.0" y2="76.7"/></g><g transform="rotate(270 256.0 256.0)"><line x1="256.0" y1="196.4" x2="256.0" y2="76.7"/></g><g transform="rotate(330 256.0 256.0)"><line x1="256.0" y1="196.4" x2="256.0" y2="76.7"/></g></g><g stroke="#CFE0F2" stroke-opacity=".22" stroke-width="3.7"><g transform="rotate(30 256.0 256.0)"><line x1="256.0" y1="196.4" x2="256.0" y2="76.7"/></g><g transform="rotate(90 256.0 256.0)"><line x1="256.0" y1="196.4" x2="256.0" y2="76.7"/></g><g transform="rotate(150 256.0 256.0)"><line x1="256.0" y1="196.4" x2="256.0" y2="76.7"/></g><g transform="rotate(210 256.0 256.0)"><line x1="256.0" y1="196.4" x2="256.0" y2="76.7"/></g><g transform="rotate(270 256.0 256.0)"><line x1="256.0" y1="196.4" x2="256.0" y2="76.7"/></g><g transform="rotate(330 256.0 256.0)"><line x1="256.0" y1="196.4" x2="256.0" y2="76.7"/></g></g><circle cx="256.0" cy="256.0" r="103.8" fill="none" stroke="#000" stroke-opacity=".38" stroke-width="8.5" filter="url(#ae-b3-aetherlogo)"/><circle cx="256.0" cy="256.0" r="55.6" fill="none" stroke="#000" stroke-opacity=".34" stroke-width="7.5" filter="url(#ae-b3-aetherlogo)"/><circle cx="256.0" cy="256.0" r="79.7" fill="none" stroke="#3DA5FF" stroke-opacity="0.250" stroke-width="58.2" filter="url(#ae-b18-aetherlogo)"/><circle cx="256.0" cy="256.0" r="79.7" fill="none" stroke="url(#ae-glass-aetherlogo)" stroke-width="40.2"/><circle cx="256.0" cy="256.0" r="98.7" fill="none" stroke="url(#ae-lip-aetherlogo)" stroke-width="2.1"/><circle cx="256.0" cy="256.0" r="60.7" fill="none" stroke="url(#ae-lip2-aetherlogo)" stroke-width="1.8"/><circle cx="256.0" cy="256.0" r="27.8" fill="#3DA5FF" fill-opacity="0.200" filter="url(#ae-b7-aetherlogo)"/><circle cx="256.0" cy="256.0" r="24.8" fill="url(#ae-glass-aetherlogo)"/><circle cx="256.0" cy="256.0" r="23.9" fill="none" stroke="url(#ae-lip-aetherlogo)" stroke-width="1.7"/><circle cx="256.0" cy="256.0" r="211.0" fill="none" stroke="url(#ae-inner-aetherlogo)" stroke-width="8.5" filter="url(#ae-b3-aetherlogo)"/></g><circle cx="256.0" cy="256.0" r="214.9" fill="none" stroke="url(#ae-rim-aetherlogo)" stroke-width="2.2"/></svg>
+</div></div><div class="meta"><b>Master mark</b><span>Solid body, glass ring and dot. 96px and above.</span></div></div><div class="card"><div class="stage dark"><div class="sv" style="width:190px"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Alalay"><title>Alalay</title><defs>
+  <radialGradient id="ae-body-aetherlogosmall" cx="50%" cy="41%" r="80%">
+    <stop offset="0%" stop-color="#080C13"/><stop offset="62%" stop-color="#0E141D"/>
+    <stop offset="100%" stop-color="#1E2633"/></radialGradient>
+  <linearGradient id="ae-rim-aetherlogosmall" x1="0.14" y1="0.02" x2="0.86" y2="0.98">
+    <stop offset="0%" stop-color="#E9F3FF" stop-opacity=".92"/>
+    <stop offset="18%" stop-color="#AFC8E2" stop-opacity=".48"/>
+    <stop offset="42%" stop-color="#7F97B2" stop-opacity=".12"/>
+    <stop offset="62%" stop-color="#7F97B2" stop-opacity=".14"/>
+    <stop offset="84%" stop-color="#A7C1DC" stop-opacity=".42"/>
+    <stop offset="100%" stop-color="#DEEDFF" stop-opacity=".74"/></linearGradient>
+  <linearGradient id="ae-inner-aetherlogosmall" x1="0.12" y1="0" x2="0.88" y2="1">
+    <stop offset="0%" stop-color="#000000" stop-opacity=".62"/>
+    <stop offset="46%" stop-color="#000000" stop-opacity=".10"/>
+    <stop offset="100%" stop-color="#B9D4EE" stop-opacity=".09"/></linearGradient>
+  <linearGradient id="ae-glass-aetherlogosmall" x1="0.3" y1="0.02" x2="0.7" y2="0.98">
+    <stop offset="0%" stop-color="#9BD4FF" stop-opacity="0.775"/>
+    <stop offset="34%" stop-color="#3DA5FF" stop-opacity="0.625"/>
+    <stop offset="72%" stop-color="#1F79D2" stop-opacity="0.500"/>
+    <stop offset="100%" stop-color="#63B8FF" stop-opacity="0.600"/></linearGradient>
+  <linearGradient id="ae-lip-aetherlogosmall" x1="0.3" y1="0" x2="0.7" y2="1">
+    <stop offset="0%" stop-color="#F4FBFF" stop-opacity=".88"/>
+    <stop offset="40%" stop-color="#BFE4FF" stop-opacity=".16"/>
+    <stop offset="66%" stop-color="#FFFFFF" stop-opacity="0"/>
+    <stop offset="100%" stop-color="#A6DAFF" stop-opacity=".40"/></linearGradient>
+  <linearGradient id="ae-lip2-aetherlogosmall" x1="0.7" y1="1" x2="0.3" y2="0">
+    <stop offset="0%" stop-color="#EAF7FF" stop-opacity=".50"/>
+    <stop offset="55%" stop-color="#FFFFFF" stop-opacity="0"/></linearGradient>
+  <radialGradient id="ae-sheen-aetherlogosmall" cx="50%" cy="50%" r="50%">
+    <stop offset="0%" stop-color="#E4F0FF" stop-opacity=".13"/>
+    <stop offset="100%" stop-color="#E4F0FF" stop-opacity="0"/></radialGradient>
+  <filter id="ae-b3-aetherlogosmall" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="3"/></filter>
+  <filter id="ae-b7-aetherlogosmall" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="7"/></filter>
+  <filter id="ae-b18-aetherlogosmall" x="-90%" y="-90%" width="280%" height="280%"><feGaussianBlur stdDeviation="18"/></filter>
+  <filter id="ae-drop-aetherlogosmall" x="-50%" y="-50%" width="200%" height="200%">
+    <feDropShadow dx="0" dy="9" stdDeviation="13" flood-color="#00060F" flood-opacity=".50"/></filter></defs><circle cx="256.0" cy="256.0" r="224.0" fill="url(#ae-body-aetherlogosmall)"/><g clip-path="url(#ae-clipL-aetherlogosmall)"><circle cx="256.0" cy="256.0" r="109.8" fill="none" stroke="url(#ae-glass-aetherlogosmall)" stroke-width="58.2"/><circle cx="256.0" cy="256.0" r="137.8" fill="none" stroke="url(#ae-lip-aetherlogosmall)" stroke-width="2.1"/><circle cx="256.0" cy="256.0" r="81.7" fill="none" stroke="url(#ae-lip2-aetherlogosmall)" stroke-width="1.8"/><circle cx="256.0" cy="256.0" r="39.2" fill="url(#ae-glass-aetherlogosmall)"/><circle cx="256.0" cy="256.0" r="38.3" fill="none" stroke="url(#ae-lip-aetherlogosmall)" stroke-width="1.7"/></g><circle cx="256.0" cy="256.0" r="222.9" fill="none" stroke="url(#ae-rim-aetherlogosmall)" stroke-width="3.2"/></svg>
+</div></div><div class="meta"><b>Small mark</b><span>Inner parts enlarged, fine detail dropped. Below 96px.</span></div></div><div class="card"><div class="stage light"><div class="sv" style="width:190px"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Alalay"><title>Alalay</title><defs>
+  <radialGradient id="ae-body-aethericonsquircle" cx="50%" cy="41%" r="80%">
+    <stop offset="0%" stop-color="#080C13"/><stop offset="62%" stop-color="#0E141D"/>
+    <stop offset="100%" stop-color="#1E2633"/></radialGradient>
+  <linearGradient id="ae-rim-aethericonsquircle" x1="0.14" y1="0.02" x2="0.86" y2="0.98">
+    <stop offset="0%" stop-color="#E9F3FF" stop-opacity=".92"/>
+    <stop offset="18%" stop-color="#AFC8E2" stop-opacity=".48"/>
+    <stop offset="42%" stop-color="#7F97B2" stop-opacity=".12"/>
+    <stop offset="62%" stop-color="#7F97B2" stop-opacity=".14"/>
+    <stop offset="84%" stop-color="#A7C1DC" stop-opacity=".42"/>
+    <stop offset="100%" stop-color="#DEEDFF" stop-opacity=".74"/></linearGradient>
+  <linearGradient id="ae-inner-aethericonsquircle" x1="0.12" y1="0" x2="0.88" y2="1">
+    <stop offset="0%" stop-color="#000000" stop-opacity=".62"/>
+    <stop offset="46%" stop-color="#000000" stop-opacity=".10"/>
+    <stop offset="100%" stop-color="#B9D4EE" stop-opacity=".09"/></linearGradient>
+  <linearGradient id="ae-glass-aethericonsquircle" x1="0.3" y1="0.02" x2="0.7" y2="0.98">
+    <stop offset="0%" stop-color="#9BD4FF" stop-opacity="0.775"/>
+    <stop offset="34%" stop-color="#3DA5FF" stop-opacity="0.625"/>
+    <stop offset="72%" stop-color="#1F79D2" stop-opacity="0.500"/>
+    <stop offset="100%" stop-color="#63B8FF" stop-opacity="0.600"/></linearGradient>
+  <linearGradient id="ae-lip-aethericonsquircle" x1="0.3" y1="0" x2="0.7" y2="1">
+    <stop offset="0%" stop-color="#F4FBFF" stop-opacity=".88"/>
+    <stop offset="40%" stop-color="#BFE4FF" stop-opacity=".16"/>
+    <stop offset="66%" stop-color="#FFFFFF" stop-opacity="0"/>
+    <stop offset="100%" stop-color="#A6DAFF" stop-opacity=".40"/></linearGradient>
+  <linearGradient id="ae-lip2-aethericonsquircle" x1="0.7" y1="1" x2="0.3" y2="0">
+    <stop offset="0%" stop-color="#EAF7FF" stop-opacity=".50"/>
+    <stop offset="55%" stop-color="#FFFFFF" stop-opacity="0"/></linearGradient>
+  <radialGradient id="ae-sheen-aethericonsquircle" cx="50%" cy="50%" r="50%">
+    <stop offset="0%" stop-color="#E4F0FF" stop-opacity=".13"/>
+    <stop offset="100%" stop-color="#E4F0FF" stop-opacity="0"/></radialGradient>
+  <filter id="ae-b3-aethericonsquircle" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="3"/></filter>
+  <filter id="ae-b7-aethericonsquircle" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="7"/></filter>
+  <filter id="ae-b18-aethericonsquircle" x="-90%" y="-90%" width="280%" height="280%"><feGaussianBlur stdDeviation="18"/></filter>
+  <filter id="ae-drop-aethericonsquircle" x="-50%" y="-50%" width="200%" height="200%">
+    <feDropShadow dx="0" dy="9" stdDeviation="13" flood-color="#00060F" flood-opacity=".50"/></filter></defs><rect x="0" y="0" width="512" height="512" rx="114" fill="#0B0F16"/><rect x="1" y="1" width="510" height="510" rx="113" fill="none" stroke="#FFFFFF" stroke-opacity=".07" stroke-width="2"/><g transform="translate(256.0,256.0) scale(0.80) translate(-256.0,-256.0)"><circle cx="256.0" cy="256.0" r="216.0" fill="url(#ae-body-aethericonsquircle)" filter="url(#ae-drop-aethericonsquircle)"/><g clip-path="url(#ae-clipL-aethericonsquircle)"><ellipse cx="219.0" cy="132.0" rx="179" ry="83" fill="url(#ae-sheen-aethericonsquircle)" transform="rotate(-14 219.0 132.0)"/><g stroke="#000000" stroke-opacity=".38" stroke-width="4.1" transform="translate(0,2.2)"><g transform="rotate(30 256.0 256.0)"><line x1="256.0" y1="196.4" x2="256.0" y2="76.7"/></g><g transform="rotate(90 256.0 256.0)"><line x1="256.0" y1="196.4" x2="256.0" y2="76.7"/></g><g transform="rotate(150 256.0 256.0)"><line x1="256.0" y1="196.4" x2="256.0" y2="76.7"/></g><g transform="rotate(210 256.0 256.0)"><line x1="256.0" y1="196.4" x2="256.0" y2="76.7"/></g><g transform="rotate(270 256.0 256.0)"><line x1="256.0" y1="196.4" x2="256.0" y2="76.7"/></g><g transform="rotate(330 256.0 256.0)"><line x1="256.0" y1="196.4" x2="256.0" y2="76.7"/></g></g><g stroke="#CFE0F2" stroke-opacity=".22" stroke-width="3.7"><g transform="rotate(30 256.0 256.0)"><line x1="256.0" y1="196.4" x2="256.0" y2="76.7"/></g><g transform="rotate(90 256.0 256.0)"><line x1="256.0" y1="196.4" x2="256.0" y2="76.7"/></g><g transform="rotate(150 256.0 256.0)"><line x1="256.0" y1="196.4" x2="256.0" y2="76.7"/></g><g transform="rotate(210 256.0 256.0)"><line x1="256.0" y1="196.4" x2="256.0" y2="76.7"/></g><g transform="rotate(270 256.0 256.0)"><line x1="256.0" y1="196.4" x2="256.0" y2="76.7"/></g><g transform="rotate(330 256.0 256.0)"><line x1="256.0" y1="196.4" x2="256.0" y2="76.7"/></g></g><circle cx="256.0" cy="256.0" r="103.8" fill="none" stroke="#000" stroke-opacity=".38" stroke-width="8.5" filter="url(#ae-b3-aethericonsquircle)"/><circle cx="256.0" cy="256.0" r="55.6" fill="none" stroke="#000" stroke-opacity=".34" stroke-width="7.5" filter="url(#ae-b3-aethericonsquircle)"/><circle cx="256.0" cy="256.0" r="79.7" fill="none" stroke="#3DA5FF" stroke-opacity="0.250" stroke-width="58.2" filter="url(#ae-b18-aethericonsquircle)"/><circle cx="256.0" cy="256.0" r="79.7" fill="none" stroke="url(#ae-glass-aethericonsquircle)" stroke-width="40.2"/><circle cx="256.0" cy="256.0" r="98.7" fill="none" stroke="url(#ae-lip-aethericonsquircle)" stroke-width="2.1"/><circle cx="256.0" cy="256.0" r="60.7" fill="none" stroke="url(#ae-lip2-aethericonsquircle)" stroke-width="1.8"/><circle cx="256.0" cy="256.0" r="27.8" fill="#3DA5FF" fill-opacity="0.200" filter="url(#ae-b7-aethericonsquircle)"/><circle cx="256.0" cy="256.0" r="24.8" fill="url(#ae-glass-aethericonsquircle)"/><circle cx="256.0" cy="256.0" r="23.9" fill="none" stroke="url(#ae-lip-aethericonsquircle)" stroke-width="1.7"/><circle cx="256.0" cy="256.0" r="211.0" fill="none" stroke="url(#ae-inner-aethericonsquircle)" stroke-width="8.5" filter="url(#ae-b3-aethericonsquircle)"/></g><circle cx="256.0" cy="256.0" r="214.9" fill="none" stroke="url(#ae-rim-aethericonsquircle)" stroke-width="2.2"/></g></svg>
+</div></div><div class="meta"><b>App icon</b><span>Windows and macOS dock, installer, store.</span></div></div><div class="card"><div class="stage blue"><div class="sv" style="width:150px"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Alalay"><title>Alalay</title><g stroke="#FFFFFF" stroke-opacity=".55" stroke-width="9"><g transform="rotate(30 256.0 256.0)"><line x1="256.0" y1="196.4" x2="256.0" y2="76.7"/></g><g transform="rotate(90 256.0 256.0)"><line x1="256.0" y1="196.4" x2="256.0" y2="76.7"/></g><g transform="rotate(150 256.0 256.0)"><line x1="256.0" y1="196.4" x2="256.0" y2="76.7"/></g><g transform="rotate(210 256.0 256.0)"><line x1="256.0" y1="196.4" x2="256.0" y2="76.7"/></g><g transform="rotate(270 256.0 256.0)"><line x1="256.0" y1="196.4" x2="256.0" y2="76.7"/></g><g transform="rotate(330 256.0 256.0)"><line x1="256.0" y1="196.4" x2="256.0" y2="76.7"/></g></g><circle cx="256.0" cy="256.0" r="79.7" fill="none" stroke="#FFFFFF" stroke-width="40.2"/><circle cx="256.0" cy="256.0" r="24.8" fill="#FFFFFF"/></svg>
+</div></div><div class="meta"><b>Mono white</b><span>One colour on dark or coloured ground.</span></div></div><div class="card"><div class="stage light"><div class="sv" style="width:150px"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Alalay"><title>Alalay</title><g stroke="#0A0D12" stroke-opacity=".55" stroke-width="9"><g transform="rotate(30 256.0 256.0)"><line x1="256.0" y1="196.4" x2="256.0" y2="76.7"/></g><g transform="rotate(90 256.0 256.0)"><line x1="256.0" y1="196.4" x2="256.0" y2="76.7"/></g><g transform="rotate(150 256.0 256.0)"><line x1="256.0" y1="196.4" x2="256.0" y2="76.7"/></g><g transform="rotate(210 256.0 256.0)"><line x1="256.0" y1="196.4" x2="256.0" y2="76.7"/></g><g transform="rotate(270 256.0 256.0)"><line x1="256.0" y1="196.4" x2="256.0" y2="76.7"/></g><g transform="rotate(330 256.0 256.0)"><line x1="256.0" y1="196.4" x2="256.0" y2="76.7"/></g></g><circle cx="256.0" cy="256.0" r="79.7" fill="none" stroke="#0A0D12" stroke-width="40.2"/><circle cx="256.0" cy="256.0" r="24.8" fill="#0A0D12"/></svg>
+</div></div><div class="meta"><b>Mono black</b><span>Print, stamps, single-colour docs.</span></div></div><div class="card"><div class="stage pale"><div class="sv" style="width:150px"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Alalay"><title>Alalay</title><g stroke="#3DA5FF" stroke-opacity=".55" stroke-width="9"><g transform="rotate(30 256.0 256.0)"><line x1="256.0" y1="196.4" x2="256.0" y2="76.7"/></g><g transform="rotate(90 256.0 256.0)"><line x1="256.0" y1="196.4" x2="256.0" y2="76.7"/></g><g transform="rotate(150 256.0 256.0)"><line x1="256.0" y1="196.4" x2="256.0" y2="76.7"/></g><g transform="rotate(210 256.0 256.0)"><line x1="256.0" y1="196.4" x2="256.0" y2="76.7"/></g><g transform="rotate(270 256.0 256.0)"><line x1="256.0" y1="196.4" x2="256.0" y2="76.7"/></g><g transform="rotate(330 256.0 256.0)"><line x1="256.0" y1="196.4" x2="256.0" y2="76.7"/></g></g><circle cx="256.0" cy="256.0" r="79.7" fill="none" stroke="#3DA5FF" stroke-width="40.2"/><circle cx="256.0" cy="256.0" r="24.8" fill="#3DA5FF"/></svg>
+</div></div><div class="meta"><b>Mono blue</b><span>Flat contexts that still allow colour.</span></div></div>
+</div>
+<p>The small mark is not the master shrunk. Its ring and dot are enlarged and its blades, glow and sheen are removed,
+because at 32px the real proportions turn to a smudge. Same silhouette, different optics. This is deliberate.</p>
+
+<h2>Lockup</h2>
+<div class="lock"><div class="sv" style="width:520px"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1359 512" role="img" aria-label="Alalay"><title>Alalay</title><defs>
+  <radialGradient id="ae-body-aetherlockup" cx="50%" cy="41%" r="80%">
+    <stop offset="0%" stop-color="#080C13"/><stop offset="62%" stop-color="#0E141D"/>
+    <stop offset="100%" stop-color="#1E2633"/></radialGradient>
+  <linearGradient id="ae-rim-aetherlockup" x1="0.14" y1="0.02" x2="0.86" y2="0.98">
+    <stop offset="0%" stop-color="#E9F3FF" stop-opacity=".92"/>
+    <stop offset="18%" stop-color="#AFC8E2" stop-opacity=".48"/>
+    <stop offset="42%" stop-color="#7F97B2" stop-opacity=".12"/>
+    <stop offset="62%" stop-color="#7F97B2" stop-opacity=".14"/>
+    <stop offset="84%" stop-color="#A7C1DC" stop-opacity=".42"/>
+    <stop offset="100%" stop-color="#DEEDFF" stop-opacity=".74"/></linearGradient>
+  <linearGradient id="ae-inner-aetherlockup" x1="0.12" y1="0" x2="0.88" y2="1">
+    <stop offset="0%" stop-color="#000000" stop-opacity=".62"/>
+    <stop offset="46%" stop-color="#000000" stop-opacity=".10"/>
+    <stop offset="100%" stop-color="#B9D4EE" stop-opacity=".09"/></linearGradient>
+  <linearGradient id="ae-glass-aetherlockup" x1="0.3" y1="0.02" x2="0.7" y2="0.98">
+    <stop offset="0%" stop-color="#9BD4FF" stop-opacity="0.775"/>
+    <stop offset="34%" stop-color="#3DA5FF" stop-opacity="0.625"/>
+    <stop offset="72%" stop-color="#1F79D2" stop-opacity="0.500"/>
+    <stop offset="100%" stop-color="#63B8FF" stop-opacity="0.600"/></linearGradient>
+  <linearGradient id="ae-lip-aetherlockup" x1="0.3" y1="0" x2="0.7" y2="1">
+    <stop offset="0%" stop-color="#F4FBFF" stop-opacity=".88"/>
+    <stop offset="40%" stop-color="#BFE4FF" stop-opacity=".16"/>
+    <stop offset="66%" stop-color="#FFFFFF" stop-opacity="0"/>
+    <stop offset="100%" stop-color="#A6DAFF" stop-opacity=".40"/></linearGradient>
+  <linearGradient id="ae-lip2-aetherlockup" x1="0.7" y1="1" x2="0.3" y2="0">
+    <stop offset="0%" stop-color="#EAF7FF" stop-opacity=".50"/>
+    <stop offset="55%" stop-color="#FFFFFF" stop-opacity="0"/></linearGradient>
+  <radialGradient id="ae-sheen-aetherlockup" cx="50%" cy="50%" r="50%">
+    <stop offset="0%" stop-color="#E4F0FF" stop-opacity=".13"/>
+    <stop offset="100%" stop-color="#E4F0FF" stop-opacity="0"/></radialGradient>
+  <filter id="ae-b3-aetherlockup" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="3"/></filter>
+  <filter id="ae-b7-aetherlockup" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="7"/></filter>
+  <filter id="ae-b18-aetherlockup" x="-90%" y="-90%" width="280%" height="280%"><feGaussianBlur stdDeviation="18"/></filter>
+  <filter id="ae-drop-aetherlockup" x="-50%" y="-50%" width="200%" height="200%">
+    <feDropShadow dx="0" dy="9" stdDeviation="13" flood-color="#00060F" flood-opacity=".50"/></filter></defs><circle cx="256.0" cy="256.0" r="216.0" fill="url(#ae-body-aetherlockup)" filter="url(#ae-drop-aetherlockup)"/><g clip-path="url(#ae-clipL-aetherlockup)"><ellipse cx="219.0" cy="132.0" rx="179" ry="83" fill="url(#ae-sheen-aetherlockup)" transform="rotate(-14 219.0 132.0)"/><g stroke="#000000" stroke-opacity=".38" stroke-width="4.1" transform="translate(0,2.2)"><g transform="rotate(30 256.0 256.0)"><line x1="256.0" y1="196.4" x2="256.0" y2="76.7"/></g><g transform="rotate(90 256.0 256.0)"><line x1="256.0" y1="196.4" x2="256.0" y2="76.7"/></g><g transform="rotate(150 256.0 256.0)"><line x1="256.0" y1="196.4" x2="256.0" y2="76.7"/></g><g transform="rotate(210 256.0 256.0)"><line x1="256.0" y1="196.4" x2="256.0" y2="76.7"/></g><g transform="rotate(270 256.0 256.0)"><line x1="256.0" y1="196.4" x2="256.0" y2="76.7"/></g><g transform="rotate(330 256.0 256.0)"><line x1="256.0" y1="196.4" x2="256.0" y2="76.7"/></g></g><g stroke="#CFE0F2" stroke-opacity=".22" stroke-width="3.7"><g transform="rotate(30 256.0 256.0)"><line x1="256.0" y1="196.4" x2="256.0" y2="76.7"/></g><g transform="rotate(90 256.0 256.0)"><line x1="256.0" y1="196.4" x2="256.0" y2="76.7"/></g><g transform="rotate(150 256.0 256.0)"><line x1="256.0" y1="196.4" x2="256.0" y2="76.7"/></g><g transform="rotate(210 256.0 256.0)"><line x1="256.0" y1="196.4" x2="256.0" y2="76.7"/></g><g transform="rotate(270 256.0 256.0)"><line x1="256.0" y1="196.4" x2="256.0" y2="76.7"/></g><g transform="rotate(330 256.0 256.0)"><line x1="256.0" y1="196.4" x2="256.0" y2="76.7"/></g></g><circle cx="256.0" cy="256.0" r="103.8" fill="none" stroke="#000" stroke-opacity=".38" stroke-width="8.5" filter="url(#ae-b3-aetherlockup)"/><circle cx="256.0" cy="256.0" r="55.6" fill="none" stroke="#000" stroke-opacity=".34" stroke-width="7.5" filter="url(#ae-b3-aetherlockup)"/><circle cx="256.0" cy="256.0" r="79.7" fill="none" stroke="#3DA5FF" stroke-opacity="0.250" stroke-width="58.2" filter="url(#ae-b18-aetherlockup)"/><circle cx="256.0" cy="256.0" r="79.7" fill="none" stroke="url(#ae-glass-aetherlockup)" stroke-width="40.2"/><circle cx="256.0" cy="256.0" r="98.7" fill="none" stroke="url(#ae-lip-aetherlockup)" stroke-width="2.1"/><circle cx="256.0" cy="256.0" r="60.7" fill="none" stroke="url(#ae-lip2-aetherlockup)" stroke-width="1.8"/><circle cx="256.0" cy="256.0" r="27.8" fill="#3DA5FF" fill-opacity="0.200" filter="url(#ae-b7-aetherlockup)"/><circle cx="256.0" cy="256.0" r="24.8" fill="url(#ae-glass-aetherlockup)"/><circle cx="256.0" cy="256.0" r="23.9" fill="none" stroke="url(#ae-lip-aetherlockup)" stroke-width="1.7"/><circle cx="256.0" cy="256.0" r="211.0" fill="none" stroke="url(#ae-inner-aetherlockup)" stroke-width="8.5" filter="url(#ae-b3-aetherlockup)"/></g><circle cx="256.0" cy="256.0" r="214.9" fill="none" stroke="url(#ae-rim-aetherlockup)" stroke-width="2.2"/><g transform="translate(636.8,340.0) scale(0.120714)" fill="#F2F6FC"><path d="M300 -297Q264 -237 266.0 -203.0Q268 -169 299 -155L344 -140Q369 -127 378.5 -111.0Q388 -95 388 -77Q388 -41 365.0 -20.5Q342 0 303 0H24Q-16 0 -36.0 -18.0Q-56 -36 -56 -68Q-56 -97 -40.5 -120.0Q-25 -143 21 -167Q51 -181 82.5 -222.5Q114 -264 146 -317L582 -1023Q706 -1227 837.0 -1324.0Q968 -1421 1106 -1421Q1171 -1421 1198.0 -1399.5Q1225 -1378 1225 -1344Q1225 -1321 1214.5 -1303.0Q1204 -1285 1180 -1270Q1144 -1248 1123.5 -1215.5Q1103 -1183 1102 -1119Q1102 -1070 1101.0 -1010.0Q1100 -950 1099.0 -884.0Q1098 -818 1096.5 -749.5Q1095 -681 1094.0 -614.5Q1093 -548 1092.0 -488.0Q1091 -428 1090.5 -378.0Q1090 -328 1090 -293Q1092 -253 1097.0 -226.5Q1102 -200 1117.5 -181.0Q1133 -162 1164 -142Q1200 -117 1200 -75Q1200 -42 1178.0 -21.0Q1156 0 1116 0H712Q675 0 659.5 -19.5Q644 -39 644 -67Q644 -96 660.5 -115.0Q677 -134 707 -148L747 -158Q780 -172 795.5 -207.0Q811 -242 812 -296Q813 -341 814.0 -399.0Q815 -457 816.5 -524.5Q818 -592 820.0 -665.0Q822 -738 823.5 -812.5Q825 -887 826.0 -960.5Q827 -1034 828.0 -1101.5Q829 -1169 829 -1226L905 -1197Q879 -1180 848.5 -1150.0Q818 -1120 781.0 -1070.5Q744 -1021 698 -945ZM309 -445 336 -573H899L888 -445ZM1990.0 -1447Q2073.0 -1447 2115.0 -1407.5Q2157.0 -1368 2157.0 -1317Q2157.0 -1257 2122.0 -1224.0Q2087.0 -1191 2033.0 -1191Q2010.0 -1191 1990.0 -1198.0Q1970.0 -1205 1951.5 -1213.0Q1933.0 -1221 1914.0 -1227.5Q1895.0 -1234 1875.0 -1234Q1851.0 -1234 1832.0 -1223.0Q1813.0 -1212 1800.5 -1192.5Q1788.0 -1173 1783.0 -1146Q1780.0 -1123 1786.0 -1100.5Q1792.0 -1078 1801.5 -1053.5Q1811.0 -1029 1818.0 -1001.0Q1825.0 -973 1825.0 -940.0Q1825.0 -907 1812.0 -867L1648.0 -333Q1623.0 -254 1627.5 -227.5Q1632.0 -201 1661.0 -201Q1681.0 -201 1702.5 -212.5Q1724.0 -224 1745.0 -245Q1757.0 -255 1767.5 -257.5Q1778.0 -260 1789.0 -254Q1807.0 -248 1812.0 -222.5Q1817.0 -197 1798.0 -157Q1774.0 -106 1729.0 -65.5Q1684.0 -25 1625.5 -2.0Q1567.0 21 1500.0 21Q1425.0 21 1388.0 -12.5Q1351.0 -46 1348.5 -109.5Q1346.0 -173 1374.0 -264L1636.0 -1124Q1687.0 -1291 1779.0 -1369.0Q1871.0 -1447 1990.0 -1447ZM2733.0 -307Q2719.0 -253 2725.5 -226.5Q2732.0 -200 2757.0 -200Q2775.0 -200 2789.5 -208.5Q2804.0 -217 2823.0 -233Q2835.0 -243 2846.0 -245.5Q2857.0 -248 2866.0 -244Q2884.0 -239 2888.0 -216.0Q2892.0 -193 2876.0 -150Q2846.0 -73 2775.0 -26.0Q2704.0 21 2615.0 21Q2555.0 21 2522.5 -16.0Q2490.0 -53 2490.0 -120Q2490.0 -145 2492.5 -171.5Q2495.0 -198 2501.5 -232.5Q2508.0 -267 2520.0 -314.0Q2532.0 -361 2550.0 -426L2570.0 -355Q2508.0 -228 2439.0 -144.5Q2370.0 -61 2292.5 -20.0Q2215.0 21 2128.0 21Q2025.0 21 1967.0 -53.0Q1909.0 -127 1923.0 -279Q1931.0 -371 1965.5 -463.5Q2000.0 -556 2059.0 -639.0Q2118.0 -722 2200.0 -786.5Q2282.0 -851 2385.0 -888.5Q2488.0 -926 2610.0 -926Q2720.0 -926 2786.0 -910.5Q2852.0 -895 2880.0 -865.5Q2908.0 -836 2904.0 -795Q2901.0 -764 2885.5 -745.0Q2870.0 -726 2852.5 -707.0Q2835.0 -688 2826.0 -656ZM2189.0 -308Q2180.0 -229 2200.5 -193.5Q2221.0 -158 2257.0 -158Q2298.0 -158 2343.5 -194.0Q2389.0 -230 2433.0 -290.0Q2477.0 -350 2513.5 -422.0Q2550.0 -494 2573.5 -567.5Q2597.0 -641 2601.0 -704Q2604.0 -741 2587.5 -760.0Q2571.0 -779 2534.0 -779Q2490.0 -779 2444.5 -752.5Q2399.0 -726 2356.5 -679.0Q2314.0 -632 2278.5 -572.0Q2243.0 -512 2219.5 -444.0Q2196.0 -376 2189.0 -308ZM3643.0 -1447Q3726.0 -1447 3768.0 -1407.5Q3810.0 -1368 3810.0 -1317Q3810.0 -1257 3775.0 -1224.0Q3740.0 -1191 3686.0 -1191Q3663.0 -1191 3643.0 -1198.0Q3623.0 -1205 3604.5 -1213.0Q3586.0 -1221 3567.0 -1227.5Q3548.0 -1234 3528.0 -1234Q3504.0 -1234 3485.0 -1223.0Q3466.0 -1212 3453.5 -1192.5Q3441.0 -1173 3436.0 -1146Q3433.0 -1123 3439.0 -1100.5Q3445.0 -1078 3454.5 -1053.5Q3464.0 -1029 3471.0 -1001.0Q3478.0 -973 3478.0 -940.0Q3478.0 -907 3465.0 -867L3301.0 -333Q3276.0 -254 3280.5 -227.5Q3285.0 -201 3314.0 -201Q3334.0 -201 3355.5 -212.5Q3377.0 -224 3398.0 -245Q3410.0 -255 3420.5 -257.5Q3431.0 -260 3442.0 -254Q3460.0 -248 3465.0 -222.5Q3470.0 -197 3451.0 -157Q3427.0 -106 3382.0 -65.5Q3337.0 -25 3278.5 -2.0Q3220.0 21 3153.0 21Q3078.0 21 3041.0 -12.5Q3004.0 -46 3001.5 -109.5Q2999.0 -173 3027.0 -264L3289.0 -1124Q3340.0 -1291 3432.0 -1369.0Q3524.0 -1447 3643.0 -1447ZM4386.0 -307Q4372.0 -253 4378.5 -226.5Q4385.0 -200 4410.0 -200Q4428.0 -200 4442.5 -208.5Q4457.0 -217 4476.0 -233Q4488.0 -243 4499.0 -245.5Q4510.0 -248 4519.0 -244Q4537.0 -239 4541.0 -216.0Q4545.0 -193 4529.0 -150Q4499.0 -73 4428.0 -26.0Q4357.0 21 4268.0 21Q4208.0 21 4175.5 -16.0Q4143.0 -53 4143.0 -120Q4143.0 -145 4145.5 -171.5Q4148.0 -198 4154.5 -232.5Q4161.0 -267 4173.0 -314.0Q4185.0 -361 4203.0 -426L4223.0 -355Q4161.0 -228 4092.0 -144.5Q4023.0 -61 3945.5 -20.0Q3868.0 21 3781.0 21Q3678.0 21 3620.0 -53.0Q3562.0 -127 3576.0 -279Q3584.0 -371 3618.5 -463.5Q3653.0 -556 3712.0 -639.0Q3771.0 -722 3853.0 -786.5Q3935.0 -851 4038.0 -888.5Q4141.0 -926 4263.0 -926Q4373.0 -926 4439.0 -910.5Q4505.0 -895 4533.0 -865.5Q4561.0 -836 4557.0 -795Q4554.0 -764 4538.5 -745.0Q4523.0 -726 4505.5 -707.0Q4488.0 -688 4479.0 -656ZM3842.0 -308Q3833.0 -229 3853.5 -193.5Q3874.0 -158 3910.0 -158Q3951.0 -158 3996.5 -194.0Q4042.0 -230 4086.0 -290.0Q4130.0 -350 4166.5 -422.0Q4203.0 -494 4226.5 -567.5Q4250.0 -641 4254.0 -704Q4257.0 -741 4240.5 -760.0Q4224.0 -779 4187.0 -779Q4143.0 -779 4097.5 -752.5Q4052.0 -726 4009.5 -679.0Q3967.0 -632 3931.5 -572.0Q3896.0 -512 3872.5 -444.0Q3849.0 -376 3842.0 -308ZM5240.0 -562Q5300.0 -742 5370.5 -833.5Q5441.0 -925 5535.0 -925Q5592.0 -925 5623.5 -888.0Q5655.0 -851 5655.0 -791Q5655.0 -724 5621.0 -681.0Q5587.0 -638 5517.0 -604Q5480.0 -589 5449.5 -567.5Q5419.0 -546 5392.5 -513.0Q5366.0 -480 5341.0 -430.5Q5316.0 -381 5290.0 -310L5149.0 76Q5101.0 215 5023.0 307.5Q4945.0 400 4841.5 446.0Q4738.0 492 4614.0 492Q4498.0 492 4438.5 442.0Q4379.0 392 4379.0 311Q4379.0 257 4414.0 220.5Q4449.0 184 4505.0 184Q4535.0 184 4557.0 199.0Q4579.0 214 4597.5 236.0Q4616.0 258 4633.0 280.5Q4650.0 303 4669.5 318.0Q4689.0 333 4715.0 333Q4748.0 333 4777.5 316.5Q4807.0 300 4830.0 267.5Q4853.0 235 4867.0 187.0Q4881.0 139 4881.0 75Q4881.0 37 4879.0 -14.5Q4877.0 -66 4873.0 -126.5Q4869.0 -187 4864.0 -252.0Q4859.0 -317 4853.0 -382.5Q4847.0 -448 4841.0 -508.5Q4835.0 -569 4829.0 -621Q4824.0 -671 4809.5 -692.5Q4795.0 -714 4777.0 -714Q4764.0 -714 4753.0 -706.5Q4742.0 -699 4729.0 -682Q4716.0 -667 4700.0 -662.5Q4684.0 -658 4670.0 -664Q4653.0 -671 4647.0 -693.5Q4641.0 -716 4655.0 -759Q4670.0 -803 4706.5 -840.5Q4743.0 -878 4794.5 -901.0Q4846.0 -924 4906.0 -924Q4974.0 -924 5015.5 -875.0Q5057.0 -826 5068.0 -722Q5073.0 -668 5077.5 -598.0Q5082.0 -528 5085.5 -448.0Q5089.0 -368 5091.5 -282.0Q5094.0 -196 5096.0 -110.0Q5098.0 -24 5098.0 57L5050.0 51Z"/></g></svg>
+</div></div>
+<p>Wordmark is Fraunces Soft Italic (SOFT 100, WONK 1, optical size 72, weight 600), kerning on, converted to outlines. Cap height is 33% of the lens diameter.
+Cap height is 33% of the lens diameter, gap 23%. Never re-set it in another face or respace it by eye.</p>
+
+<h2>Which file, which size</h2>
+<table>
+<tr><th>Context</th><th>File</th></tr>
+<tr><td>Favicon, tray, taskbar, 16&ndash;64px</td><td><code>alalay-logo-small.svg</code> / <code>favicon.ico</code></td></tr>
+<tr><td>Avatars, Slack, X, GitHub, 128px and up</td><td><code>alalay-logo-512.png</code></td></tr>
+<tr><td>Desktop app icon, installer, store</td><td><code>alalay-icon-squircle.svg</code></td></tr>
+<tr><td>Site header, deck title, docs</td><td><code>alalay-lockup.svg</code></td></tr>
+<tr><td>Light backgrounds, printed material</td><td><code>alalay-lockup-dark-text.svg</code></td></tr>
+<tr><td>One-colour printing, embroidery, stamps</td><td><code>alalay-mark-mono-*.svg</code></td></tr>
+</table>
+
+<h2>Rules</h2>
+<ul>
+<li>Clear space on every side is one dot diameter. Nothing enters it.</li>
+<li>Do not use the master below 96px. Switch to the small mark.</li>
+<li>Do not make the ring opaque. The glass reading depends on the blades showing through it.</li>
+<li>Do not recolour the ring. The state colours below belong to the live indicator, never to the logo.</li>
+<li>Do not add a drop shadow. There is already a contact shadow in the artwork.</li>
+<li>Do not stretch, rotate, outline, or crop the disc.</li>
+</ul>
+
+<h2>Applying it to the product UI</h2>
+<div class="warn"><b>Collision to fix first.</b> In <code>Aether-panel-Final.html</code>, <code>--s-blocked</code>
+(the <i>needsYou</i> state) is already blue at <code>91,157,249</code>. If the accent also goes blue, listening and
+needsYou become the same colour and the state system stops meaning anything. Move needsYou to the amber you are
+freeing up. It is the right colour for it, and it lets stopped drop to neutral grey.</div>
+<pre>:root{
+  --accent:61,165,255;        /* was 233,169,77  - identity, listening, working */
+  --s-blocked:233,169,77;     /* was 91,157,249  - needsYou takes the freed amber */
+  --s-unverified:148,161,178; /* was 245,158,11  - stopped goes neutral grey */
+  --s-verified:74,222,128;    /* unchanged - completed */
+  --s-failed:242,109,109;     /* unchanged - problem */
+}</pre>
+
+<div class="warn"><b>Separate bug found while measuring.</b> <code>.ap .iris</code> is <code>width:28px</code> with
+<code>border:6px</code>, and the only <code>*{box-sizing:border-box}</code> in that file sits inside the
+<code>DEMO-START</code> block. So the iris is 28px across today, but becomes 40px the day that throwaway block is
+deleted. The ring silently gets much fatter and stops matching this logo. Set
+<code>box-sizing:border-box</code> on <code>.ap .iris</code> itself, or state the size as 40px, before wiring the real stream.</div>
+<p>Also <code>#demoBar input[type=range]{accent-color:#E9A94D}</code> near the bottom still hardcodes the old amber.
+Harness only, does not ship, but it will look wrong on screen until swapped.</p>
+
+</div></body></html>

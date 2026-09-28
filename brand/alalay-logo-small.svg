@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="Alalay"><title>Alalay</title><defs>
+  <radialGradient id="ae-body" cx="50%" cy="41%" r="80%">
+    <stop offset="0%" stop-color="#080C13"/><stop offset="62%" stop-color="#0E141D"/>
+    <stop offset="100%" stop-color="#1E2633"/></radialGradient>
+  <linearGradient id="ae-rim" x1="0.14" y1="0.02" x2="0.86" y2="0.98">
+    <stop offset="0%" stop-color="#E9F3FF" stop-opacity=".92"/>
+    <stop offset="18%" stop-color="#AFC8E2" stop-opacity=".48"/>
+    <stop offset="42%" stop-color="#7F97B2" stop-opacity=".12"/>
+    <stop offset="62%" stop-color="#7F97B2" stop-opacity=".14"/>
+    <stop offset="84%" stop-color="#A7C1DC" stop-opacity=".42"/>
+    <stop offset="100%" stop-color="#DEEDFF" stop-opacity=".74"/></linearGradient>
+  <linearGradient id="ae-inner" x1="0.12" y1="0" x2="0.88" y2="1">
+    <stop offset="0%" stop-color="#000000" stop-opacity=".62"/>
+    <stop offset="46%" stop-color="#000000" stop-opacity=".10"/>
+    <stop offset="100%" stop-color="#B9D4EE" stop-opacity=".09"/></linearGradient>
+  <linearGradient id="ae-glass" x1="0.3" y1="0.02" x2="0.7" y2="0.98">
+    <stop offset="0%" stop-color="#9BD4FF" stop-opacity="0.775"/>
+    <stop offset="34%" stop-color="#3DA5FF" stop-opacity="0.625"/>
+    <stop offset="72%" stop-color="#1F79D2" stop-opacity="0.500"/>
+    <stop offset="100%" stop-color="#63B8FF" stop-opacity="0.600"/></linearGradient>
+  <linearGradient id="ae-lip" x1="0.3" y1="0" x2="0.7" y2="1">
+    <stop offset="0%" stop-color="#F4FBFF" stop-opacity=".88"/>
+    <stop offset="40%" stop-color="#BFE4FF" stop-opacity=".16"/>
+    <stop offset="66%" stop-color="#FFFFFF" stop-opacity="0"/>
+    <stop offset="100%" stop-color="#A6DAFF" stop-opacity=".40"/></linearGradient>
+  <linearGradient id="ae-lip2" x1="0.7" y1="1" x2="0.3" y2="0">
+    <stop offset="0%" stop-color="#EAF7FF" stop-opacity=".50"/>
+    <stop offset="55%" stop-color="#FFFFFF" stop-opacity="0"/></linearGradient>
+  <radialGradient id="ae-sheen" cx="50%" cy="50%" r="50%">
+    <stop offset="0%" stop-color="#E4F0FF" stop-opacity=".13"/>
+    <stop offset="100%" stop-color="#E4F0FF" stop-opacity="0"/></radialGradient>
+  <filter id="ae-b3" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="3"/></filter>
+  <filter id="ae-b7" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="7"/></filter>
+  <filter id="ae-b18" x="-90%" y="-90%" width="280%" height="280%"><feGaussianBlur stdDeviation="18"/></filter>
+  <filter id="ae-drop" x="-50%" y="-50%" width="200%" height="200%">
+    <feDropShadow dx="0" dy="9" stdDeviation="13" flood-color="#00060F" flood-opacity=".50"/></filter></defs><circle cx="256.0" cy="256.0" r="224.0" fill="url(#ae-body)"/><g clip-path="url(#ae-clipL)"><circle cx="256.0" cy="256.0" r="109.8" fill="none" stroke="url(#ae-glass)" stroke-width="58.2"/><circle cx="256.0" cy="256.0" r="137.8" fill="none" stroke="url(#ae-lip)" stroke-width="2.1"/><circle cx="256.0" cy="256.0" r="81.7" fill="none" stroke="url(#ae-lip2)" stroke-width="1.8"/><circle cx="256.0" cy="256.0" r="39.2" fill="url(#ae-glass)"/><circle cx="256.0" cy="256.0" r="38.3" fill="none" stroke="url(#ae-lip)" stroke-width="1.7"/></g><circle cx="256.0" cy="256.0" r="222.9" fill="none" stroke="url(#ae-rim)" stroke-width="3.2"/></svg>
