@@ -526,6 +526,40 @@ html.rail-h #demoWrap{
   margin:22px auto 0; max-width:34ch; color:rgba(255,255,255,.92);
   text-shadow:0 2px 24px rgba(0,0,0,.7);
 }
+/* THE HERO LOCKUP, laid out like brand/social/alalay-x-banner: the mark on
+   the left in a soft blue glow, the name to its right, the subline under
+   the name and flush with its left edge. Everything is sized off --b, the
+   mark's image box. The disc is 84% of that box (r 216 of 512), so:
+     name size  .55b   (name about 1.9x the disc wide, as on the banner)
+     gap        .12b   (visible gap between disc and name about .24 disc)
+   The disc never drops under 96px, the brand's floor for the master. */
+#ovHero .lockup{
+  --b:clamp(114px,20vw,330px);
+  display:inline-flex; align-items:center; gap:calc(var(--b) * .12);
+  text-align:left; position:relative;
+}
+#ovHero .lk-mark{
+  width:var(--b); height:var(--b); flex:none; display:block; position:relative;
+}
+#ovHero .lk-mark{ z-index:1 }
+#ovHero .lockup::before{
+  content:""; position:absolute; z-index:0; pointer-events:none;
+  left:calc(var(--b) * -.55); top:50%; width:calc(var(--b) * 2.1); height:calc(var(--b) * 2.1);
+  transform:translateY(-50%); border-radius:50%;
+  background:radial-gradient(closest-side, rgba(28,96,196,.42), rgba(22,70,150,.16) 55%, rgba(10,30,70,0) 100%);
+}
+#ovHero .lk-text{ position:relative; z-index:1; min-width:0 }
+#ovHero .wm{
+  font-size:calc(var(--b) * .55); line-height:1; color:#F2F6FC;
+  text-shadow:none;
+}
+#ovHero .wm .brand{ padding:0 0 .08em }
+#ovHero .sub{
+  margin:.1em 0 0; max-width:none; text-align:left;
+  font-size:clamp(15px, calc(var(--b) * .09), 26px); font-weight:500; letter-spacing:.01em;
+  color:rgba(222,232,246,.92); text-shadow:0 2px 18px rgba(0,0,0,.6);
+  text-wrap:balance;   /* on a phone it breaks into two even lines, not one word alone */
+}
 .kick{
   font-size:clamp(10px,.78vw,13px); letter-spacing:.2em; text-transform:uppercase;
   font-weight:650; color:rgba(255,255,255,.75); margin:0 0 18px;
@@ -1078,8 +1112,13 @@ body.rebuilding *::after{ transition:none !important; animation:none !important 
 
 <!-- 1.  HERO, on the still sky -->
 <div class="ov" id="ovHero"><div class="in lift">
-  <h1 class="wm"><span class="brand">Alalay</span></h1>
-  <p class="sub">A voice controlled desktop assistant for Windows.</p>
+  <div class="lockup">
+    <img class="lk-mark" src="brand/alalay-logo.svg" alt="" width="512" height="512" fetchpriority="high" decoding="async">
+    <div class="lk-text">
+      <h1 class="wm"><span class="brand">Alalay</span></h1>
+      <p class="sub">A voice controlled desktop assistant</p>
+    </div>
+  </div>
 </div></div>
 
 <!-- 1b. THE INTRO LINE.  Fills the pan between the hero and the lens.
