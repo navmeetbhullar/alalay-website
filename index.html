@@ -1930,7 +1930,11 @@ html.rail-h .rail{
   left:50%; bottom:calc(14px + env(safe-area-inset-bottom, 0px));
   transform:translateX(-50%);
   flex-direction:row; align-items:center;
-  gap:clamp(40px, 15.5vw, 72px);
+  /* the gap is whatever SIX markers leave of the width, less 20px a side,
+     capped at the old 72. A fixed 15.5vw was fine for four markers but
+     ran six past both edges of a phone (444px on a 390 screen). If a
+     marker is added or removed, change the 6 and the 5 here. */
+  gap:min(72px, calc((100vw - 40px - 6 * var(--mark)) / 5));
   --mark:24px;
 }
 html.rail-h .rail .indicator{ --ind-scale:.414 }
@@ -1973,6 +1977,25 @@ html.rail-h .rail.at-top .waitlist .tag{
   padding:6px 13px; border-radius:99px;
   box-shadow:0 4px 24px -6px rgba(var(--accent),.35) }
 html.rail-h .rail.at-top .waitlist .tag .w{ display:inline }
+
+/* The waitlist marker is always named on a phone. Only one section label
+   is ever shown centred above the row, so without this the one marker
+   that matters most was an unlabelled dot everywhere but the very top.
+   A small gold two-line label sits right-aligned above it; it steps
+   aside at the top (the big invitation is there) and on the waitlist
+   itself (the centred label already says it). Wide never shows it: the
+   vertical rail keeps the waitlist tag up at all times. */
+.rail .peek{ display:none }
+html.rail-h .rail .peek{
+  display:block; position:absolute; right:-4px; bottom:calc(100% + 6px);
+  text-align:right; white-space:nowrap; pointer-events:auto; cursor:pointer;
+  font-size:9px; font-weight:650; letter-spacing:.12em; line-height:1.25;
+  text-transform:uppercase; color:rgba(var(--accent),.98);
+  /* the same dark pill as every other rail label, so it reads on the sky */
+  background:rgba(10,11,13,.72); border-radius:9px; padding:4px 7px }
+html.rail-h .rail .peek .w{ display:block }
+html.rail-h .rail.at-top .peek,
+html.rail-h .rail .waitlist.on .peek{ visibility:hidden }
 
 /* the chevron cue rides with the (fixed, centred) invitation, pointing
    down toward the row */
@@ -2026,6 +2049,7 @@ html.rail-h .rail .cue i:nth-child(2){ animation:cue-y 2.6s var(--ease-soft) .6s
         <span class="w">the</span>
         <span class="w">waitlist</span></span>
       <span class="cue" aria-hidden="true"><i></i><i></i></span>
+      <span class="peek" aria-hidden="true"><span class="w">Join the</span><span class="w">waitlist</span></span>
     </span>
   </button>
 </nav>
