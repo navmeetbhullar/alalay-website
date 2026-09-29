@@ -1,0 +1,42 @@
+# Alalay
+
+> Alalay (said ah-LAH-lie, a Filipino word for "personal aide") is a voice assistant for Windows that does the work. You hold a hotkey and say what you want, and it opens your apps, clicks, types and saves on your own PC, with your own apps and logins. It checks every step and never shows a fake "done". It is in development: join the waitlist to try it.
+
+## What works today
+
+- Hold a hotkey and speak, or type, and it does the task
+- Opens Windows apps by name (about 200 are known)
+- Types into apps like Notepad and saves files with the name you choose
+- Searches the web, reads the articles and writes notes into Notepad
+- Handles tasks with several steps
+- Checks every step and shows it as Verified, Failed, Unverified or Blocked
+- Asks before anything risky, and you can answer out loud
+
+Today it runs on one Windows laptop in a test setup. It is not yet an app people can install.
+
+## Coming next (planned, not working yet)
+
+- Working in the background while you use your PC
+- Clicking around inside websites
+- Saved routines: jobs you repeat run without calling the AI, so they cost nothing
+- Data entry into Tally and Excel, and a teach mode that shows you where to click
+- Connections to Gmail, Outlook and Calendar
+- Choosing any AI model, including a local one that runs on your own PC
+- An app anyone can install
+
+## How it is different
+
+Many AI tools only talk, reach a few apps through connectors, or run on a cloud computer. Alalay works on your own Windows PC with your own apps. It reads the app itself (its buttons and fields) and uses screenshots only as a backup, so it uses less AI per task. It checks every step and says so honestly when something did not work.
+
+## Who it helps most
+
+- Accountants and small offices doing data entry in Tally, Excel and government portals
+- Small business owners with no staff to hand small jobs to
+- Students and researchers who search, read, take notes and save files
+- People who find typing or a mouse hard
+
+## Links
+
+- Website and waitlist: https://alalay-waitlist.vercel.app/
+- X: https://x.com/Alalay_AI
+- Founder on LinkedIn (Navmeet Bhullar): https://www.linkedin.com/in/navmeet-bhullar/
