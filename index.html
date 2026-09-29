@@ -1419,6 +1419,11 @@ h2.kick{ max-width:none; line-height:1.4; margin:0 0 18px; letter-spacing:.2em }
 
 @media (prefers-reduced-motion: reduce){
   .ey .pupil,.ey .lid,.ap .core{ transition:none }
+  /* Every lens state is told apart by colour and shape, so with reduced
+     motion they hold still: no spin, breathe, blink or sweep, in the
+     grid, the introduction or the demo. !important because the panel's
+     state rules are spliced above and carry their own animations. */
+  .indicator, .indicator *{ animation:none !important }
 }
 
 
@@ -2010,7 +2015,9 @@ html.rail-h .rail .cue i:nth-child(2){ animation:cue-y 2.6s var(--ease-soft) .6s
   .rail .waitlist .ap .iris,.rail .waitlist .ap .core{ animation:none }
   .rail::after{ transition:none }
   .rail .waitlist .tag{ transition:opacity .3s }
-  .rail .cue i{ animation:none }
+  /* the nth-child rules that start the cue outrank a plain .cue i, so
+     this never took effect */
+  .rail .cue i, .rail .cue i:nth-child(n){ animation:none }
 }
 </style>
 
