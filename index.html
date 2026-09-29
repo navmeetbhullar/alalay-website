@@ -1051,6 +1051,17 @@ h2.kick{ max-width:none; line-height:1.4; margin:0 0 18px; letter-spacing:.2em }
 .card h3{ margin:0 0 8px; font-size:clamp(16px,1.25vw,22px); font-weight:650; letter-spacing:.01em; color:#fff }
 .card p{ margin:0 0 12px; font-size:clamp(13.5px,.95vw,16px); line-height:1.5; font-weight:450; color:rgba(255,255,255,.8) }
 .cards.four .card p{ margin:0 }
+.card-top{ display:flex; align-items:center; gap:10px; margin-bottom:8px }
+.card-top h3{ margin:0 }
+.card .ic{ width:22px; height:22px; flex:none; fill:none; stroke:rgb(var(--accent)); stroke-width:1.8;
+  stroke-linecap:round; stroke-linejoin:round }
+/* a card that is half today, half planned: the planned half sits under a
+   rule with its own label, so neither label can be read against the
+   wrong sentence */
+.card .later{ margin:12px 0 0; padding-top:10px; border-top:.5px solid rgba(255,255,255,.12);
+  color:rgba(255,255,255,.66) }
+.later-lbl{ display:block; margin-bottom:3px; font-size:clamp(9.5px,.7vw,11px); font-weight:650;
+  letter-spacing:.12em; text-transform:uppercase; color:rgb(var(--accent)) }
 
 .tag{
   display:inline-block; margin:0 6px 0 0; padding:3px 9px; border-radius:999px;
@@ -1119,11 +1130,25 @@ h2.kick{ max-width:none; line-height:1.4; margin:0 0 18px; letter-spacing:.2em }
   .cards.four .card h3{ font-size:14.5px; margin-bottom:4px }
   .cards.four .card p{ font-size:13px; line-height:1.4 }
   .chores li{ font-size:14.5px }
-  .cards.six .card{ padding:12px 13px }
-  .cards.six .card h3{ font-size:15px; margin-bottom:6px }
-  .cards.six .card p{ font-size:13px; line-height:1.4; margin-bottom:8px }
-  .cards.six .tag{ margin:0 4px 4px 0 }
-  .cards.six{ gap:8px }
+  /* phones: one card per row, the label beside the title, so six
+     cards and their today / next split fit one screen */
+  .cards.six{ grid-template-columns:1fr; gap:6px }
+  .cards.six .card{ padding:10px 12px; display:grid; grid-template-columns:1fr auto;
+    column-gap:8px; align-items:center }
+  .cards.six .card-top{ grid-column:1; grid-row:1; margin:0; gap:8px }
+  .cards.six .card > .tag{ grid-column:2; grid-row:1; margin:0 }
+  .cards.six .card > p{ grid-column:1 / -1; grid-row:2; margin:4px 0 0; font-size:13px; line-height:1.4 }
+  .cards.six .card > p.later{ grid-row:3; margin-top:6px; padding-top:6px }
+  .cards.six .later-lbl{ display:inline; margin-right:6px }
+  .cards.six .card h3{ font-size:15px }
+  .cards.six .ic{ width:18px; height:18px }
+  .cards.six .card{ padding:8px 12px }
+  .cards.six .card > p{ margin-top:2px }
+  .cards.six{ gap:5px }
+  /* the rail already names this section on a phone; the h2 carries it */
+  #ovBetter .kick{ display:none }
+  #ovBetter h2{ font-size:22px }
+  #ovBetter{ padding-top:20px }
   #ovBetter .kick{ margin-bottom:10px }
   #ovBetter h2{ margin-bottom:6px }
   #ovBetter .cards.six{ margin-top:10px }
@@ -1411,18 +1436,26 @@ h2.kick{ max-width:none; line-height:1.4; margin:0 0 18px; letter-spacing:.2em }
   <p class="kick">Why it is better</p>
   <h2>How <span class="brand">Alalay</span> is different from other AI desktop tools</h2>
   <div class="cards six">
-    <div class="card"><h3>Faster</h3>
-      <p>It reads the app itself, its buttons and fields. Screenshots are only a backup.</p><span class="tag now">Works today</span></div>
-    <div class="card"><h3>Cheaper</h3>
-      <p>Less AI than sending a screenshot for every click. Jobs you repeat will run as free saved routines.</p><span class="tag now">Works today</span><span class="tag next">Coming next</span></div>
-    <div class="card"><h3>Private and safe</h3>
-      <p>No stream of screenshots to the cloud. It asks before anything risky. A fully local option is next.</p><span class="tag now">Works today</span><span class="tag next">Coming next</span></div>
-    <div class="card"><h3>Any AI you like</h3>
-      <p>Not locked to one AI company. Use the one you trust, even one on your own PC.</p><span class="tag next">Coming next</span></div>
-    <div class="card"><h3>Easy to set up</h3>
-      <p>Install it, hold a key, talk. No long setup.</p><span class="tag next">Coming next</span></div>
-    <div class="card"><h3>Honest</h3>
-      <p>It checks every step. If nothing happened, it says so. Never a fake &ldquo;done&rdquo;.</p><span class="tag now">Works today</span></div>
+    <div class="card"><div class="card-top"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg><h3>Faster</h3></div>
+      <p>It reads the app itself, its buttons and fields. Screenshots are only a backup.</p><span class="tag now">Works today</span>
+    </div>
+    <div class="card"><div class="card-top"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></svg><h3>Cheaper</h3></div>
+      <p>It uses less AI than sending a screenshot for every click.</p><span class="tag now">Works today</span>
+      <p class="later"><span class="later-lbl">Coming next</span>Jobs you repeat run as saved routines that cost nothing.</p>
+    </div>
+    <div class="card"><div class="card-top"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="m9 12 2 2 4-4"/></svg><h3>Private and safe</h3></div>
+      <p>No stream of screenshots to the cloud. It asks before anything risky.</p><span class="tag now">Works today</span>
+      <p class="later"><span class="later-lbl">Coming next</span>A fully local option, where nothing leaves your PC.</p>
+    </div>
+    <div class="card"><div class="card-top"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 18h1.4c1.3 0 2.5-.6 3.3-1.7l6.1-8.6c.7-1.1 2-1.7 3.3-1.7H22"/><path d="m18 2 4 4-4 4"/><path d="M2 6h1.9c1.5 0 2.9.9 3.6 2.2"/><path d="M22 18h-5.9c-1.3 0-2.6-.7-3.3-1.8l-.5-.8"/><path d="m18 14 4 4-4 4"/></svg><h3>Any AI you like</h3></div>
+      <p>Not locked to one AI company. Use the one you trust, even one on your own PC.</p><span class="tag next">Coming next</span>
+    </div>
+    <div class="card"><div class="card-top"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></svg><h3>Easy to set up</h3></div>
+      <p>Install it, hold a key, talk. No long setup.</p><span class="tag next">Coming next</span>
+    </div>
+    <div class="card"><div class="card-top"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg><h3>Honest</h3></div>
+      <p>It checks every step. If nothing happened, it says so. Never a fake &ldquo;done&rdquo;.</p><span class="tag now">Works today</span>
+    </div>
   </div>
 </div></div>
 
