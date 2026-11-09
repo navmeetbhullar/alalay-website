@@ -234,10 +234,15 @@
    ================================================================ */
 :root{
   --accent:233,169,77;
-  --s-verified:74,222,128;
-  --s-failed:242,109,109;
-  --s-unverified:245,158,11;
-  --s-blocked:91,157,249;
+  /* State colours: the approved seven (docs/design/lens-*.html in Alalay).
+     /lens/lens-states.js sets these same values on load. */
+  --s-resting:91,100,114;          /* Ready #5B6472 */
+  --s-listening:61,165,255;        /* Listening #3DA5FF */
+  --s-working:139,124,246;         /* Working #8B7CF6 */
+  --s-blocked:245,179,66;          /* Needs you #F5B342 */
+  --s-verified:74,222,128;         /* Completed #4ADE80 */
+  --s-unverified:203,213,225;      /* Stopped #CBD5E1 */
+  --s-failed:242,109,109;          /* Problem #F26D6D */
   --ease:cubic-bezier(.32,.72,0,1);
   --ease-soft:cubic-bezier(.33,1,.68,1);
   --ease-spring:cubic-bezier(.2,.9,.25,1.06);
@@ -320,90 +325,12 @@
   transition:background .45s ease, box-shadow .45s ease, width .4s ease, height .4s ease,
     margin-left .28s cubic-bezier(.25,1.4,.4,1), margin-top .28s cubic-bezier(.25,1.4,.4,1) }
 
-[data-s=listening] .ap .iris{ width:40px;height:40px;border-width:4px;border-color:rgb(var(--accent));opacity:1;
-  box-shadow:0 0 22px rgba(var(--accent),.5), inset 0 0 15px rgba(var(--accent),.32);
-  animation:ap-breathe 2.2s ease-in-out infinite }
-@keyframes ap-breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.075)}}
-[data-s=listening] .ap .core{ background:rgb(var(--accent));width:7px;height:7px;box-shadow:0 0 12px rgba(var(--accent),.9) }
+/* The lens itself (the cells, the introduction, the demo panel) is the
+   approved engine on a canvas: /lens/lens-engine.js, byte for byte the
+   reference docs/design/lens-*.html in Alalay. The .ap rules above stay
+   only for the rail's small resting marker, which never changes state. */
+canvas.lens{ display:block; width:44px; height:44px }
 
-[data-s=working] .ap .iris{ width:34px;height:34px;border-width:5px;border-color:transparent;
-  border-top-color:rgb(var(--accent));border-right-color:rgb(var(--accent));opacity:1;
-  animation:ap-spin 1.15s linear infinite }
-@keyframes ap-spin{to{transform:rotate(360deg)}}
-[data-s=working] .ap .blades{ opacity:.9; animation:ap-spin-rev 7s linear infinite }
-@keyframes ap-spin-rev{to{transform:rotate(-360deg)}}
-[data-s=working] .ap .core{ background:rgba(var(--accent),.75);width:6px;height:6px;box-shadow:0 0 10px rgba(var(--accent),.6) }
-
-[data-s=needsYou] .ap .iris{ width:44px;height:44px;border-width:3px;border-color:rgb(var(--s-blocked));opacity:1;
-  box-shadow:0 0 28px rgba(var(--s-blocked),.55), inset 0 0 20px rgba(var(--s-blocked),.3);
-  animation:ind-blink 1.6s ease-in-out infinite }
-[data-s=needsYou] .ap .core{ background:rgb(var(--s-blocked));width:10px;height:10px;box-shadow:0 0 16px rgba(var(--s-blocked),.95) }
-
-[data-s=completed] .ap .iris{ width:46px;height:46px;border-width:2px;border-color:rgb(var(--s-verified));opacity:1;
-  box-shadow:0 0 26px rgba(var(--s-verified),.5), inset 0 0 16px rgba(var(--s-verified),.16) }
-[data-s=completed] .ap .core{ background:rgb(var(--s-verified));width:6px;height:6px;box-shadow:0 0 12px rgba(var(--s-verified),.8) }
-
-[data-s=stopped] .ap .iris{ width:16px;height:16px;border-width:6px;border-color:rgb(var(--s-unverified));opacity:.88 }
-[data-s=stopped] .ap .core{ background:rgba(0,0,0,.5);width:4px;height:4px;box-shadow:none }
-
-[data-s=problem] .ap .iris{ width:34px;height:34px;border-width:5px;border-color:rgb(var(--s-failed));opacity:1;
-  box-shadow:0 0 26px rgba(var(--s-failed),.6), inset 0 0 16px rgba(var(--s-failed),.3);
-  animation:ind-blink-fast 1.1s ease-in-out infinite }
-[data-s=problem] .ap .core{ background:rgb(var(--s-failed));width:8px;height:8px;box-shadow:0 0 14px rgba(var(--s-failed),.9) }
-
-/* --- breath --- */
-.br{ width:66px;height:20px;border-radius:999px;background:rgba(255,255,255,.34);opacity:.5;border:0;
-  transition:background .5s ease, box-shadow .5s ease, transform .5s var(--ease-soft), opacity .5s ease }
-[data-s=listening] .br{ background:rgb(var(--accent));opacity:1;box-shadow:0 0 26px 3px rgba(var(--accent),.55);
-  animation:br-breathe 2s ease-in-out infinite }
-@keyframes br-breathe{0%,100%{transform:scale(1)}50%{transform:scaleX(1.22) scaleY(1.15)}}
-[data-s=working] .br{ opacity:1; transition:none;
-  background-image:linear-gradient(90deg, rgba(var(--accent),.22) 0%, rgb(var(--accent)) 50%, rgba(var(--accent),.22) 100%);
-  background-size:200% 100%; background-repeat:repeat;
-  box-shadow:0 0 18px 1px rgba(var(--accent),.32);
-  animation:br-sweep 2s linear infinite }
-@keyframes br-sweep{ from{background-position:0% 0} to{background-position:-200% 0} }
-[data-s=needsYou] .br{ background:rgb(var(--s-blocked));opacity:1;transform:scaleX(1.14);
-  box-shadow:0 0 34px 6px rgba(var(--s-blocked),.6) }
-[data-s=completed] .br{ background:rgb(var(--s-verified));opacity:1;box-shadow:0 0 32px 5px rgba(var(--s-verified),.55) }
-[data-s=stopped] .br{ background:rgb(var(--s-unverified));opacity:.8;transform:scaleX(.66) }
-[data-s=problem] .br{ background:rgb(var(--s-failed));opacity:1;animation:br-red 1.8s ease-in-out infinite }
-@keyframes br-red{0%,100%{opacity:.42;box-shadow:none}50%{opacity:1;box-shadow:0 0 34px 5px rgba(var(--s-failed),.6)}}
-
-/* --- eyes --- */
-.ey{ gap:14px;align-items:center }
-.ey .eye{ width:38px;height:38px;border-radius:50%;position:relative;overflow:hidden;
-  background:radial-gradient(circle at 50% 38%,#0b0e13 0%,#10151d 70%,#1a202a 100%);
-  box-shadow:inset 0 2px 7px rgba(0,0,0,.88), inset 0 -1px 0 rgba(255,255,255,.05),
-    0 0 0 1px rgba(255,255,255,.08), 0 8px 20px rgba(0,0,0,.45);
-  border:0 solid transparent;
-  transition:height .35s var(--ease-soft), border-radius .35s ease, background .35s ease,
-    box-shadow .35s ease, border-color .35s ease }
-.ey .pupil{ position:absolute;width:15px;height:15px;border-radius:50%;background:rgba(255,255,255,.34);
-  top:50%;left:50%;
-  transition:background .4s ease, box-shadow .4s ease, width .3s ease, height .3s ease, opacity .3s ease,
-    transform .26s cubic-bezier(.25,1.4,.4,1) }
-.ey .lid{ position:absolute;left:-3px;right:-3px;height:0;background:#12161d;transition:height .1s ease;z-index:2 }
-.ey .lid.t{top:0} .ey .lid.b{bottom:0}
-.ey .eye.blink .lid{ height:52% }
-[data-s=listening] .ey{ animation:ey-beat 1.5s ease-in-out infinite }
-@keyframes ey-beat{0%{transform:scale(1)}12%{transform:scale(1.14)}24%{transform:scale(1)}
-  36%{transform:scale(1.09)}50%{transform:scale(1)}100%{transform:scale(1)}}
-[data-s=listening] .ey .pupil{ background:rgb(var(--accent));width:17px;height:17px;box-shadow:0 0 16px rgba(var(--accent),.75) }
-[data-s=working] .ey .eye{ height:20px;border-radius:42% }
-[data-s=working] .ey .pupil{ background:rgb(var(--accent));box-shadow:0 0 13px rgba(var(--accent),.6) }
-[data-s=needsYou] .ey .eye{ height:42px }
-[data-s=needsYou] .ey .pupil{ background:rgb(var(--s-blocked));width:19px;height:19px;
-  box-shadow:0 0 20px rgba(var(--s-blocked),.8);animation:ind-blink 1.6s ease-in-out infinite }
-[data-s=completed] .ey .eye{ height:17px;border-radius:999px 999px 0 0;overflow:visible;
-  background:transparent;box-shadow:none;border-width:4px 0 0 0;border-style:solid;
-  border-top-color:rgb(var(--s-verified));filter:drop-shadow(0 0 9px rgba(var(--s-verified),.65)) }
-[data-s=completed] .ey .pupil{ opacity:0 }
-[data-s=completed] .ey .lid{ display:none }
-[data-s=stopped] .ey .eye{ height:15px;border-radius:42% }
-[data-s=stopped] .ey .pupil{ background:rgb(var(--s-unverified));opacity:.7 }
-[data-s=problem] .ey .pupil{ background:rgb(var(--s-failed));box-shadow:0 0 18px rgba(var(--s-failed),.8);
-  animation:ind-blink-fast 1.1s ease-in-out infinite }
 
 /* ================================================================
    PANEL
@@ -792,8 +719,9 @@ h2.big{ font-size:clamp(34px,5vw,88px); max-width:14ch; margin-bottom:28px; line
   margin:0 auto clamp(26px,4vh,52px);
   filter:drop-shadow(0 40px 80px rgba(0,0,0,.6));
 }
-#introLens .skin{ display:none !important }
-#introLens .skin-aperture{ display:flex !important }
+/* The engine draws the lens body at 94% of its canvas, so the canvas is
+   the old painted size / .94: the lens stays the size it was. */
+#introLens canvas.lens{ width:calc(58px * var(--ind-scale) / .94); height:calc(58px * var(--ind-scale) / .94) }
 @media (max-height:820px){ #introLens{ --ind-scale:2.8 } }
 @media (max-height:660px){ #introLens{ --ind-scale:2.2 } }
 @media (max-width:640px){ #introLens{ --ind-scale:2.1 } }
@@ -839,7 +767,7 @@ h2.big{ font-size:clamp(34px,5vw,88px); max-width:14ch; margin-bottom:28px; line
    narrow gets the smaller of the two rather than the last rule to match.
    The widest look is EYES at about 90px, so the cap is content / 90. */
 .cell{ --ind-h:1.35; --ind-w:1.35 }
-.cell .indicator{ --ind-scale:min(var(--ind-h),var(--ind-w)) }
+.cell canvas.lens{ width:calc(66px * min(var(--ind-h),var(--ind-w))); height:calc(66px * min(var(--ind-h),var(--ind-w))) }
 /* Tracks the scale instead of being stepped separately, so the row can
    never keep height the indicator no longer needs. */
 .cell .hold{ height:calc(66px * min(var(--ind-h),var(--ind-w)));
@@ -855,13 +783,6 @@ h2.big{ font-size:clamp(34px,5vw,88px); max-width:14ch; margin-bottom:28px; line
 .cell .nm{ margin-top:clamp(6px,.9vh,12px); font-size:clamp(8.5px,.72vw,12px);
   letter-spacing:.1em; text-transform:uppercase; color:rgba(255,255,255,.46) }
 
-/* The panel's CSS keys off data-skin on an ANCESTOR, and body carries
-   one for the real panel. Without this every cell would paint the
-   aperture on top of its own look. */
-.cell .skin{ display:none !important }
-.cell[data-skin=aperture] .skin-aperture,
-.cell[data-skin=breath]   .skin-breath,
-.cell[data-skin=eyes]     .skin-eyes{ display:flex !important }
 
 /* Dropping a column is not free: seven states over four columns is two
    lines per look, so three looks become six lines and the grid roughly
@@ -889,6 +810,7 @@ h2.big{ font-size:clamp(34px,5vw,88px); max-width:14ch; margin-bottom:28px; line
   #ovLooks .grow .rowname{ margin-bottom:clamp(2px,.6vh,4px) }
   #ovLooks .cell{ padding:clamp(6px,1vh,13px) 4px clamp(5px,.8vh,10px) }
   #ovLooks .cell .hold{ height:calc(58px * min(var(--ind-h),var(--ind-w))) }
+  #ovLooks .cell canvas.lens{ width:calc(58px * min(var(--ind-h),var(--ind-w))); height:calc(58px * min(var(--ind-h),var(--ind-w))) }
 }
 
 /* Belt and braces after the width fix above: even if some future change
@@ -1036,6 +958,14 @@ h2.big{ font-size:clamp(34px,5vw,88px); max-width:14ch; margin-bottom:28px; line
   flex-direction:column-reverse; align-items:flex-end; gap:12px;
 }
 #demoScene .ae-panel{ pointer-events:auto }
+/* The demo pop-up is SOLID dark, the same as the app's bubble (the widget
+   circle, circle.css .bubble): the same top light, on an opaque ground, so
+   nothing behind it shows through. */
+#demoScene .ae-panel.lg{
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.085) 0%, rgba(255,255,255,.022) 26%, rgba(255,255,255,0) 58%),
+    rgb(16,17,21);
+  -webkit-backdrop-filter:none; backdrop-filter:none }
 
 /* ------------------------------------------------------------------
    THE NARROW SCENE.  806x966, set by layout() below 900px viewport.
@@ -1473,11 +1403,7 @@ h2.kick{ max-width:none; line-height:1.4; margin:0 0 18px; letter-spacing:.2em }
         No callouts. Its dot follows the pointer. On a camera hold. -->
 <div class="ov" id="ovLens"><div class="in">
   <div id="introLens">
-    <div class="indicator">
-      <div class="skin skin-aperture ap">
-        <span class="blades"></span><span class="iris"></span><span class="core"></span>
-      </div>
-    </div>
+    <canvas class="lens" id="introCanvas" aria-hidden="true"></canvas>
   </div>
   <p class="lensline">Hold a key and say the job. <span class="brand">Alalay</span> opens the apps, clicks, types and saves, with your own apps and logins.</p>
   <p class="keys">Hold <span class="k">Ctrl</span> + <span class="k">Space</span> and say what you want.</p>
@@ -1533,16 +1459,7 @@ h2.kick{ max-width:none; line-height:1.4; margin:0 0 18px; letter-spacing:.2em }
 <div class="ae-host">
 
   <button class="ae-ind-btn" id="indBtn" aria-label="Alalay">
-    <div class="indicator" id="indicator">
-      <div class="skin skin-aperture ap">
-        <span class="blades"></span><span class="iris"></span><span class="core"></span>
-      </div>
-      <div class="skin skin-breath br"></div>
-      <div class="skin skin-eyes ey">
-        <span class="eye"><i class="lid t"></i><i class="pupil"></i><i class="lid b"></i></span>
-        <span class="eye"><i class="lid t"></i><i class="pupil"></i><i class="lid b"></i></span>
-      </div>
-    </div>
+    <div class="indicator" id="indicator"><canvas class="lens" id="lensCanvas" aria-hidden="true"></canvas></div>
   </button>
 
   <div class="ae-panel lg" id="panel">
@@ -2063,6 +1980,9 @@ html.rail-h .rail .cue i:nth-child(2){ animation:cue-y 2.6s var(--ease-soft) .6s
 
 
 
+<script src="/lens/lens-states.js"></script>
+<script src="/lens/lens-engine.js"></script>
+<script src="/lens/lens-host.js"></script>
 <script>
 /* ==== SPLICED AE STATE MACHINE, BYTE IDENTICAL ==== */
 /* ================================================================
@@ -2087,13 +2007,16 @@ const AE = (function(){
   const maxIndex = ()=> m.steps.length-1+(m.ended?1:0);
 
   /* ---------- indicator ---------- */
+  // The lens: the shared engine (/lens/), on the indicator's canvas. It
+  // goes from Completed back to Ready by itself after about 5 s.
+  const lens = LensHost.create($('lensCanvas'), { look: B.dataset.skin, state: 'ready' });
   function setIndicatorState(state){
     if(!IND.includes(state)) return;
     clearTimeout(completedTimer);
     B.dataset.s = state;
-    if(state==='completed') completedTimer=setTimeout(()=>setIndicatorState('ready'),2500);
+    lens.state(state);
   }
-  function setIndicatorSkin(skin){ if(['aperture','breath','eyes'].includes(skin)) B.dataset.skin=skin; }
+  function setIndicatorSkin(skin){ if(['aperture','breath','eyes'].includes(skin)){ B.dataset.skin=skin; lens.look(skin); } }
   function setIndicatorCorner(c){ if(['tl','tr','bl','br'].includes(c)) B.dataset.corner=c; }
 
   /* ---------- panel ---------- */
@@ -2295,41 +2218,14 @@ const AE = (function(){
     if(e.key==='Escape')     closePanel();
   });
 
-  /* ---------- indicator: click, cursor tracking, blinking ---------- */
+  /* ---------- indicator: click. The lens engine follows the cursor and
+     blinks by itself. ---------- */
   $('indBtn').onclick = togglePanel;
-
-  const core=document.querySelector('.ap .core');
-  const pupils=[...document.querySelectorAll('.ey .pupil')];
-  document.addEventListener('mousemove',e=>{
-    if(core){
-      const r=core.parentElement.getBoundingClientRect();
-      const cx=r.left+r.width/2, cy=r.top+r.height/2;
-      const a=Math.atan2(e.clientY-cy,e.clientX-cx);
-      const d=Math.min(5,Math.hypot(e.clientX-cx,e.clientY-cy)/26);
-      core.style.marginLeft=(Math.cos(a)*d)+'px';
-      core.style.marginTop =(Math.sin(a)*d)+'px';
-    }
-    pupils.forEach(p=>{
-      const r=p.parentElement.getBoundingClientRect();
-      const cx=r.left+r.width/2, cy=r.top+r.height/2;
-      const a=Math.atan2(e.clientY-cy,e.clientX-cx);
-      const d=Math.min(8,Math.hypot(e.clientX-cx,e.clientY-cy)/16);
-      p.style.transform=`translate(calc(-50% + ${Math.cos(a)*d}px), calc(-50% + ${Math.sin(a)*d}px))`;
-    });
-  });
-  const eyeEls=[...document.querySelectorAll('.ey .eye')];
-  (function blink(){
-    if(B.dataset.skin==='eyes' && !['working','completed','stopped'].includes(B.dataset.s)){
-      eyeEls.forEach(el=>el.classList.add('blink'));
-      setTimeout(()=>eyeEls.forEach(el=>el.classList.remove('blink')),125);
-    }
-    setTimeout(blink, 2400+Math.floor(Math.random()*3800));
-  })();
 
   return { openPanel, closePanel, togglePanel, showResting,
            setIndicatorState, setIndicatorSkin, setIndicatorCorner,
            runStart, runDeclare, runResolve, runAsk, runEnd,
-           setListening, setProblem, get model(){return m} };
+           setListening, setProblem, lens, get model(){return m} };
 })();
 /* ==== END AE STATE MACHINE ==== */
 </script>
@@ -2558,15 +2454,8 @@ var LENS_STATES = ['ready','listening','working','needsYou','completed','stopped
 var LENS_LABEL = { ready:'Ready', listening:'Listening', working:'Working',
                    needsYou:'Needs you', completed:'Completed', stopped:'Stopped',
                    problem:'Problem' };
-var INDICATOR =
-  '<div class="indicator">' +
-    '<div class="skin skin-aperture ap"><span class="blades"></span><span class="iris"></span><span class="core"></span></div>' +
-    '<div class="skin skin-breath br"></div>' +
-    '<div class="skin skin-eyes ey">' +
-      '<span class="eye"><i class="lid t"></i><i class="pupil"></i><i class="lid b"></i></span>' +
-      '<span class="eye"><i class="lid t"></i><i class="pupil"></i><i class="lid b"></i></span>' +
-    '</div>' +
-  '</div>';
+/* Each cell is the approved engine on a canvas (/lens/), held in its state. */
+var INDICATOR = '<canvas class="lens" aria-hidden="true"></canvas>';
 
 function buildLensGrid(){
   var root=document.getElementById('lensGrid'), html='';
@@ -2582,6 +2471,9 @@ function buildLensGrid(){
     html += '</div></div>';
   }
   root.innerHTML = html;
+  [].forEach.call(root.querySelectorAll('.cell'), function(c){
+    LensHost.create(c.querySelector('canvas'), { look:c.dataset.skin, state:c.dataset.s, keepDone:true });
+  });
 }
 
 /* ==================================================================
@@ -2710,6 +2602,7 @@ function applyBeat(target){
   for (var i=from; i<=target; i++) BEATS[i].run();
   applied = target;
   paintScene(BEATS[target].s);
+  if (AE.model && AE.model.steps) AE.lens.progress(AE.model.steps.filter(function(s){ return s.state && s.state!=='blocked'; }).length / STEP_TOTAL);
   var cap = -1;
   for (var j=target; j>=0; j--){ if (typeof BEATS[j].cap === 'number'){ cap = BEATS[j].cap; break; } }
   paintCaption(cap);
@@ -2930,47 +2823,14 @@ function overlays(p){
    written in the one rAF loop, because there are two dozen elements
    to move and reading their rects in a mousemove thrashes layout.
    ================================================================== */
-var pupils=[], cores=[], eyeEls=[], mx=-1, my=-1, lastMx=-2, lastMy=-2;
+var mx=-1, my=-1;
+/* The introduction lens: the approved engine, Aperture, at rest. It looks
+   alive by itself (breathing, then still), like every other lens. */
 function initLens(){
-  pupils=[].slice.call(document.querySelectorAll('.ey .pupil'));
-  cores =[].slice.call(document.querySelectorAll('.ap .core'));
-  eyeEls=[].slice.call(document.querySelectorAll('.cell .ey .eye'));
-  if (reduce.matches) return;
-  (function blink(){
-    setTimeout(function(){
-      for(var i=0;i<eyeEls.length;i++) eyeEls[i].classList.add('blink');
-      setTimeout(function(){
-        for(var i=0;i<eyeEls.length;i++) eyeEls[i].classList.remove('blink');
-      }, 120);
-      blink();
-    }, 2600 + Math.random()*3400);
-  })();
+  var cv = document.getElementById('introCanvas');
+  if (cv) LensHost.create(cv, { look:'aperture', state:'ready' });
 }
-function applyLensTracking(){
-  if (reduce.matches || mx < 0) return;
-  if (mx === lastMx && my === lastMy) return;
-  lastMx = mx; lastMy = my;
-  var i, r, cx, cy, a, d;
-  for (i=0;i<cores.length;i++){
-    r=cores[i].parentElement.getBoundingClientRect();
-    if (r.width === 0) continue;                 /* skin not on show */
-    cx=r.left+r.width/2; cy=r.top+r.height/2;
-    a=Math.atan2(my-cy,mx-cx);
-    /* divided by the lens's own on screen size, so the big
-       introduction lens and the little grid ones feel the same */
-    d=Math.min(T.LENS_TRACK, Math.hypot(mx-cx,my-cy)/(r.width*0.45));
-    cores[i].style.marginLeft=(Math.cos(a)*d).toFixed(2)+'px';
-    cores[i].style.marginTop =(Math.sin(a)*d).toFixed(2)+'px';
-  }
-  for (i=0;i<pupils.length;i++){
-    r=pupils[i].parentElement.getBoundingClientRect();
-    if (r.width === 0) continue;
-    cx=r.left+r.width/2; cy=r.top+r.height/2;
-    a=Math.atan2(my-cy,mx-cx);
-    d=Math.min(8,Math.hypot(mx-cx,my-cy)/16);
-    pupils[i].style.transform='translate(calc(-50% + '+(Math.cos(a)*d).toFixed(2)+'px), calc(-50% + '+(Math.sin(a)*d).toFixed(2)+'px))';
-  }
-}
+function applyLensTracking(){ /* the engine follows the cursor itself */ }
 
 /* ==================================================================
    THE WAITLIST.  Email required, phone optional.
